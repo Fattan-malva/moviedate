@@ -15,12 +15,18 @@ export interface Episode {
   season: number;
   episode: number;
   title: string;
+  slug?: string;
 }
 
 export interface Review {
   author: string;
   rating: number;
   comment: string;
+}
+
+export interface StreamServer {
+  name: string;
+  url: string;
 }
 
 export interface MovieItem {
@@ -41,6 +47,7 @@ export interface MovieItem {
   imdbRating: number;
   reviews: Review[];
   url: string;
+  streamServers?: StreamServer[];
 }
 
 export interface CategorySection {
