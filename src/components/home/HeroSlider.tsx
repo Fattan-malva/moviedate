@@ -41,11 +41,12 @@ export default function HeroSlider({ items }: Props) {
     );
   }
 
-  // Filter valid hero items
-  const validItems = items.filter(i => i.poster && i.title && i.title.length > 1);
+  // Filter valid hero items (must have title and poster)
+  const validItems = items.filter(i => i && i.title && i.title.length > 1 && i.poster);
   if (!validItems.length) return null;
 
   const item = validItems[current];
+  if (!item) return null;
 
   return (
     <div className="w-full relative">
@@ -87,12 +88,12 @@ export default function HeroSlider({ items }: Props) {
                   {item.type}
                 </span>
               )}
-              {item.year > 0 && <span className="text-gray-400">{item.year}</span>}
+              {item.year && item.year > 0 && <span className="text-gray-400">{item.year}</span>}
               {item.duration && <span className="text-gray-400">{item.duration}</span>}
               {item.country && (
                 <span className="hidden sm:inline text-gray-400">{item.country}</span>
               )}
-              {item.imdbRating > 0 && (
+              {item.imdbRating && item.imdbRating > 0 && (
                 <span className="text-yellow-400 text-[10px] md:text-xs font-bold">
                   ★ {item.imdbRating.toFixed(1)}
                 </span>

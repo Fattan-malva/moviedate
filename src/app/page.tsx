@@ -8,10 +8,24 @@ export default async function HomePage() {
   const data = await getHomepage();
   const { hero, categories } = data;
 
-  // Filter categories that have items with actual titles
-  const validCategories = categories.filter(
-    (cat) => cat.items && cat.items.length > 0 && cat.items.some((i) => i.title && i.poster)
-  );
+  // Filter categories that have items with actual titles and posters
+  const validCategories = categories
+    .filter(
+      (cat) =>
+        cat &&
+        cat.items &&
+        cat.items.length > 0 &&
+        cat.items.some(
+          (i) =>
+            i &&
+            typeof i.title === "string" &&
+            i.title.length > 1
+        )
+    )
+    .map((cat) => ({
+      ...cat,
+      items: cat.items.filter((i) => i && i.title && i.title.length > 1),
+    }));
 
   return (
     <main className="w-full min-h-screen bg-[#0a0a0f]">

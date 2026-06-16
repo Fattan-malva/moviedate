@@ -30,17 +30,130 @@ async function fetchPage(path: string): Promise<cheerio.CheerioAPI> {
   return cheerio.load(data);
 }
 
+// Server-only: Puppeteer is not available in Vercel serverless
+// Use HTTP-based fetching with fallback Nuxt state extraction
 async function fetchPageDynamic(path: string): Promise<cheerio.CheerioAPI> {
   try {
-    const { fetchPageWithBrowser } = await import("./browser-scraper");
-    const result = await fetchPageWithBrowser(path);
+    // Use HTTP client - works on all serverless platforms
+    const $ = await fetchPage(path);
     
-    (globalThis as any).__MOVIBOX_NUXT_DATA__ = result.nuxtData;
-    (globalThis as any).__MOVIBOX_NUXT_STATE__ = result.nuxtState;
+    // Try to extract Nuxt state from HTML (works for SSR pages)
+    const html = $.html();
+    const nuxtMatch = html.match(/window\.__NUXT__\s*=\s*(\{[\s\S]*?\});\s*<\/script>/);
+    if (nuxtMatch) {
+      try {
+        const nuxtRaw = nuxtMatch[1];
+        // Parse Nuxt state
+        const nuxtParsed = nuxtRaw
+          .replace(/function\s*\([^)]*\)\s*\{[\s\S]*?\}/g, "null")  // Remove functions
+          .replace(/,(\s*[}\]])/g, "$1");  // Remove trailing commas
+        
+        const nuxtObj = JSON.parse(nuxtParsed);
+        (globalThis as any).__MOVIBOX_NUXT_DATA__ = nuxtObj?.data || null;
+        (globalThis as any).__MOVIBOX_NUXT_STATE__ = nuxtObj?.state || null;
+      } catch {
+        // Ignore parse errors
+      }
+    }
     
-    return cheerio.load(result.html || "<html></html>");
+    // Check if HTML has enough images - if not, Nuxt didn't SSR properly
+    const imgCount = $("img").length;
+    if (imgCount < 3) {
+      // Try direct image extraction from Nuxt JSON in HTML
+      extractNuxtFromHtml($, html);
+    }
+    
+    return $;
   } catch {
-    return fetchPage(path);
+    return cheerio.load("<html><body></body></html>");
+  }
+}
+
+// Extract Nuxt data from raw HTML (no browser needed)
+function extractNuxtFromHtml($: cheerio.CheerioAPI, html: string) {
+  const nuxtItems: ContentItem[] = [];
+  
+  // Look for JSON-LD structured data (schema.org VideoObject)
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const json = JSON.parse($(el).html() || "");
+      if (json["@type"] === "VideoObject" || json["@type"] === "Movie") {
+        const slug = slugFromHref(json.url || json.mainEntityOfPage?.url || "");
+        if (slug) {
+          nuxtItems.push({
+            slug,
+            title: json.name || "",
+            thumbnail: Array.isArray(json.thumbnailUrl) ? json.thumbnailUrl[0] : json.thumbnailUrl || json.image || "",
+            synopsis: json.description || "",
+          });
+        }
+      }
+    } catch {}
+  });
+  
+  // Look for __NUXT__ data in script tags
+  const nuxtScriptMatch = html.match(/window\.__NUXT__\s*=\s*(\{[\s\S]*?\})\s*;?\s*<\/script>/);
+  if (nuxtScriptMatch) {
+    try {
+      const nuxtStr = nuxtScriptMatch[1]
+        .replace(/function[\s\S]*?\}\s*/g, "null")
+        .replace(/,\s*}/g, "}")
+        .replace(/,\s*\]/g, "]");
+      const nuxt = JSON.parse(nuxtStr);
+      
+      // Extract data arrays from Nuxt
+      if (nuxt.data && Array.isArray(nuxt.data)) {
+        for (const item of nuxt.data) {
+          if (item && typeof item === "object") {
+            const movie = extractMovieFromObject(item);
+            if (movie) nuxtItems.push(movie);
+          }
+        }
+      }
+    } catch {}
+  }
+  
+  // Also search raw HTML for image URLs with patterns
+  const imgPatterns = html.match(/https:\/\/pbcdn[a-z0-9]*\.aoneroom\.com\/image\/[^"'\s>]+\.(?:jpg|jpeg|png|webp)/gi) || [];
+  const titlePatterns = html.match(/title:\s*["']([^"']{3,100})["']/gi) || [];
+  
+  // Match titles with images
+  const seen = new Set<string>();
+  for (let i = 0; i < Math.min(imgPatterns.length, titlePatterns.length); i++) {
+    const imgUrl = imgPatterns[i];
+    const titleMatch = titlePatterns[i]?.match(/title:\s*["']([^"']+)["']/);
+    const title = titleMatch?.[1] || "";
+    
+    if (imgUrl && title && !seen.has(imgUrl)) {
+      seen.add(imgUrl);
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      nuxtItems.push({
+        slug,
+        title,
+        thumbnail: imgUrl,
+      });
+    }
+  }
+  
+  // Also look for og:image meta tags
+  $("meta[property='og:image']").each((_, el) => {
+    const img = $(el).attr("content") || "";
+    if (img.includes("pbcdn")) {
+      // Try to find related title
+      const nearbyTitle = $(el).closest("div, section, article").find("h1, h2, h3, a[href*='/detail/']").first().text().trim();
+      if (nearbyTitle && nearbyTitle.length > 2 && nearbyTitle.length < 100) {
+        const slug = nearbyTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        if (!nuxtItems.some(i => i.thumbnail === img)) {
+          nuxtItems.push({ slug, title: nearbyTitle, thumbnail: img });
+        }
+      }
+    }
+  });
+  
+  // Merge into global state
+  if (nuxtItems.length > 0) {
+    const existing = (globalThis as any).__MOVIBOX_NUXT_DATA__ || [];
+    (globalThis as any).__MOVIBOX_NUXT_DATA__ = [...existing, ...nuxtItems];
   }
 }
 

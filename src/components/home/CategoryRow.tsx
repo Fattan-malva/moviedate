@@ -37,8 +37,7 @@ export default function CategoryRow({ title, items, showType = false }: Props) {
     );
   };
 
-  // Filter: only show items that have a title and (optionally) a poster
-  const validItems = items.filter((item) => item.title && item.title.length > 1);
+  const validItems = items.filter((item) => item && item.title && item.title.length > 1);
 
   if (!loaded) {
     return (
