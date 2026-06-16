@@ -367,17 +367,30 @@ function uniqueItems(items: ContentItem[]): ContentItem[] {
   });
 }
 
+function isValidMovieItem(item: ContentItem): boolean {
+  if (!item.title) return false;
+  if (item.title.length < 2) return false;
+  if (item.title.length > 200) return false;
+  // Filter emoji-only or weird titles
+  if (/^[🔥❤️⭐🎬🎥💥🎉✅❌]+$/.test(item.title)) return false;
+  // Filter section headers that got scraped as items
+  if (item.title.match(/^(Trending|Hot|New|Popular|Latest|Top|Featured|Recommended|Rekomendasi|Terbaru|Populer)/i) && !item.thumbnail) return false;
+  // Filter slugs with query params (not real movie slugs)
+  if (item.slug && (item.slug.includes("?") || item.slug.includes("&") || item.slug.includes("="))) return false;
+  return true;
+}
+
 function extractItems($: cheerio.CheerioAPI, root?: cheerio.Cheerio<Element>): ContentItem[] {
   const items: ContentItem[] = [];
   const cards = root ? root.find(CARD_SELECTOR) : $(CARD_SELECTOR);
   cards.each((_, el) => {
     const item = itemFromCard($, el);
-    if (item) items.push(item);
+    if (item && isValidMovieItem(item)) items.push(item);
   });
   
   // Add items from Nuxt state if HTML extraction found too few
   if (items.length < 3) {
-    const nuxtItems = extractFromNuxtState();
+    const nuxtItems = extractFromNuxtState().filter(isValidMovieItem);
     for (const item of nuxtItems) {
       if (!items.some(i => i.slug === item.slug)) {
         items.push(item);

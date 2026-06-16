@@ -1,3 +1,5 @@
+"server-only";
+
 import puppeteer from "puppeteer";
 
 const BASE_URL = process.env.URL_SCRAPPING?.replace(/\/+$/, "") ?? "https://movibox.net";
