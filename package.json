@@ -1,0 +1,29 @@
+{
+  "name": "moviedate",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "scrape": "node scripts/scrape.mjs"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.3.1",
+    "lucide-react": "^1.19.0",
+    "next": "^15.5.19",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.9",
+    "puppeteer": "^24.43.1",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3"
+  }
+}
