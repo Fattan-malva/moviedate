@@ -23,15 +23,15 @@ export default function SearchBar({ initialQuery = "" }: { initialQuery?: string
   };
 
   return (
-    <form onSubmit={submit} className="relative">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+    <form onSubmit={submit} className="relative group">
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-violet-400 transition-colors" />
       <input
         ref={inputRef}
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search movies, TV shows, anime..."
-        className="w-full bg-[#14141f] border border-[#2d2d44] rounded-xl py-3.5 pl-12 pr-12 text-base text-white placeholder-gray-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-all"
+        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl py-3.5 pl-12 pr-12 text-base text-white placeholder-gray-500 focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.06] transition-all"
       />
       {query && (
         <button

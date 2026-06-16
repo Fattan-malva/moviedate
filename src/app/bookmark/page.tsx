@@ -5,6 +5,7 @@ import { Heart, Trash2 } from "lucide-react";
 import type { MovieItem } from "@/lib/types";
 import { getAllMovies } from "@/lib/data";
 import MovieGrid from "@/components/movie/MovieGrid";
+import { MovieGridSkeleton } from "@/components/ui/Skeleton";
 
 export default function BookmarkPage() {
   const [bookmarkedSlugs, setBookmarkedSlugs] = useState<string[]>([]);
@@ -39,7 +40,9 @@ export default function BookmarkPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <Heart className="w-6 h-6 text-pink-400" />
+          <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/30 flex items-center justify-center">
+            <Heart className="w-5 h-5 text-pink-400" />
+          </div>
           <h1 className="text-2xl md:text-3xl font-bold text-white">Bookmarks</h1>
         </div>
         {bookmarkedMovies.length > 0 && (
@@ -54,12 +57,14 @@ export default function BookmarkPage() {
       </div>
 
       {!loaded ? (
-        <div className="text-center py-16 text-gray-500">Loading...</div>
+        <MovieGridSkeleton count={12} />
       ) : bookmarkedMovies.length > 0 ? (
         <MovieGrid items={bookmarkedMovies} showType />
       ) : (
         <div className="text-center py-16">
-          <Heart className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-8 h-8 text-gray-600" />
+          </div>
           <p className="text-gray-500 text-lg">No bookmarks yet</p>
           <p className="text-gray-600 text-sm mt-2">Save movies to quickly find them later</p>
         </div>

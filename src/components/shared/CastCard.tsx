@@ -12,7 +12,7 @@ export default function CastCard({ member }: Props) {
     .slice(0, 2);
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-[#14141f] border border-[#1f1f2e] min-w-[200px]">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-xl min-w-[200px] hover:bg-white/[0.06] hover:border-violet-500/30 transition-all">
       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white shrink-0">
         {initials}
       </div>

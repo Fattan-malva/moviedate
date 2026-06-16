@@ -1,33 +1,16 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #0a0a0f;
-  --foreground: #ededed;
-  --card: #14141f;
-  --card-hover: #1a1a2e;
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
-  --muted: #6b7280;
-  --border: #1f1f2e;
+body {
+  background: #0a0a0f;
+  color: #ededed;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 * {
   scrollbar-width: thin;
   scrollbar-color: #2d2d44 transparent;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-.snap-x-mandatory {
-  scroll-snap-type: x mandatory;
-}
-
-.snap-start {
-  scroll-snap-align: start;
 }
 
 .hide-scrollbar::-webkit-scrollbar {

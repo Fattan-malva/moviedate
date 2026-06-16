@@ -4,6 +4,8 @@ import MovieGrid from "@/components/movie/MovieGrid";
 import Badge from "@/components/ui/Badge";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: Promise<{ slug: string }>;
 }

@@ -1,20 +1,21 @@
 import { getMovieBySlug, getAllMovies } from "@/lib/data";
-import HistoryTracker from "@/components/shared/HistoryTracker";
 import { notFound } from "next/navigation";
-import { Clock, MapPin, Star, Calendar, ChevronDown } from "lucide-react";
+import { Clock, MapPin, Star, Calendar } from "lucide-react";
 import BookmarkButton from "@/components/shared/BookmarkButton";
 import CastCard from "@/components/shared/CastCard";
 import Badge from "@/components/ui/Badge";
 import MovieGrid from "@/components/movie/MovieGrid";
+import HistoryTracker from "@/components/shared/HistoryTracker";
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  const movies = await getAllMovies();
-  return movies.map((m) => ({ slug: m.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -33,42 +34,42 @@ export default async function MovieDetailPage({ params }: Props) {
 
   if (!movie) notFound();
 
-  const moreLikeThis = (await getAllMovies())
+  const allMovies = await getAllMovies();
+  const moreLikeThis = allMovies
     .filter((m) => m.slug !== slug && m.genres.some((g) => movie.genres.includes(g)))
     .slice(0, 12);
 
   return (
     <div className="min-h-screen">
       <HistoryTracker slug={movie.slug} />
-      {/* Hero Section */}
-      <section className="relative h-[40vh] md:h-[55vh] min-h-[350px]">
+
+      <section className="relative h-[40vh] md:h-[55vh] min-h-[350px] overflow-hidden">
         {movie.poster ? (
           <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-violet-900/40 to-pink-900/40" />
+          <div className="w-full h-full bg-gradient-to-br from-violet-900/40 via-indigo-900/40 to-pink-900/40" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/70 to-transparent" />
       </section>
 
-      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 -mt-40 relative z-10">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Poster */}
           <div className="w-48 md:w-64 shrink-0 hidden md:block">
-            <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-2xl shadow-black/50 border border-[#1f1f2e]">
+            <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-2xl shadow-black/50 border border-white/10 bg-white/5 backdrop-blur-xl">
               {movie.poster ? (
                 <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-violet-600 to-pink-600 flex items-center justify-center text-white font-bold text-lg p-4 text-center">
+                <div className="w-full h-full bg-gradient-to-br from-violet-600 via-indigo-600 to-pink-600 flex items-center justify-center text-white font-bold text-lg p-4 text-center">
                   {movie.title}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Info */}
           <div className="flex-1 pt-4 md:pt-20">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">{movie.title}</h1>
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg">
+              {movie.title}
+            </h1>
 
             <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-4">
               {movie.year > 0 && (
@@ -92,7 +93,7 @@ export default async function MovieDetailPage({ params }: Props) {
               {movie.imdbRating > 0 && (
                 <span className="flex items-center gap-1 text-yellow-400">
                   <Star className="w-3.5 h-3.5 fill-current" />
-                  {movie.imdbRating}
+                  {movie.imdbRating.toFixed(1)}
                 </span>
               )}
             </div>
@@ -111,7 +112,7 @@ export default async function MovieDetailPage({ params }: Props) {
                   href={movie.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-full text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-full text-sm font-medium transition-all hover:shadow-lg hover:shadow-violet-500/25"
                 >
                   Watch Online
                 </a>
@@ -127,7 +128,6 @@ export default async function MovieDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Episodes */}
         {movie.episodes && movie.episodes.length > 0 && (
           <section className="mt-10">
             <h2 className="text-xl font-bold text-white mb-4">Episodes</h2>
@@ -135,7 +135,7 @@ export default async function MovieDetailPage({ params }: Props) {
               {movie.episodes.map((ep, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-[#14141f] border border-[#1f1f2e] hover:border-violet-500/30 transition-colors cursor-pointer"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-xl hover:bg-white/[0.06] hover:border-violet-500/30 transition-all cursor-pointer"
                 >
                   <span className="text-xs font-bold text-violet-400 w-16 shrink-0">
                     S{ep.season}:E{ep.episode}
@@ -147,7 +147,6 @@ export default async function MovieDetailPage({ params }: Props) {
           </section>
         )}
 
-        {/* Top Cast */}
         {movie.cast && movie.cast.length > 0 && (
           <section className="mt-10">
             <h2 className="text-xl font-bold text-white mb-4">Top Cast</h2>
@@ -159,44 +158,6 @@ export default async function MovieDetailPage({ params }: Props) {
           </section>
         )}
 
-        {/* Reviews */}
-        {movie.reviews && movie.reviews.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-xl font-bold text-white mb-4">User Reviews</h2>
-            <div className="grid gap-3">
-              {movie.reviews.map((review, i) => (
-                <div
-                  key={i}
-                  className="p-4 rounded-lg bg-[#14141f] border border-[#1f1f2e]"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white">
-                      {review.author[0]?.toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">{review.author}</p>
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, j) => (
-                          <Star
-                            key={j}
-                            className={`w-3 h-3 ${
-                              j < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-600"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {review.comment && (
-                    <p className="text-sm text-gray-400 ml-11">{review.comment}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* More Like This */}
         {moreLikeThis.length > 0 && (
           <section className="mt-10 mb-10">
             <h2 className="text-xl font-bold text-white mb-4">More Like This</h2>

@@ -3,12 +3,14 @@ import { Film } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[#1f1f2e] mt-16">
+    <footer className="border-t border-white/[0.06] mt-16">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Film className="w-5 h-5 text-violet-500" />
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
+                <Film className="w-3.5 h-3.5 text-white" />
+              </div>
               <span className="text-lg font-bold bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-transparent">
                 MovieDate
               </span>
@@ -45,7 +47,7 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        <div className="border-t border-[#1f1f2e] mt-8 pt-6 text-center text-sm text-gray-600">
+        <div className="border-t border-white/[0.06] mt-8 pt-6 text-center text-sm text-gray-600">
           MovieDate &copy; {new Date().getFullYear()}. Data sourced from MovieBox.
         </div>
       </div>

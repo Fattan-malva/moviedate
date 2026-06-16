@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { CONTENT_TYPES } from "@/lib/utils";
+import { CONTENT_TYPES } from "@/lib/data";
 
 interface Props {
   genres: string[];
@@ -32,6 +32,13 @@ export default function FilterSidebar({ genres, yearRange }: Props) {
 
   const hasFilters = currentType !== "all" || currentGenre || currentYear;
 
+  const btnClass = (active: boolean) =>
+    `px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+      active
+        ? "bg-violet-500/20 text-violet-300 border-violet-500/30"
+        : "bg-white/[0.03] text-gray-400 border-white/[0.06] hover:border-violet-500/30 hover:text-white hover:bg-white/[0.06]"
+    }`;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -53,11 +60,7 @@ export default function FilterSidebar({ genres, yearRange }: Props) {
             <button
               key={t.value}
               onClick={() => updateFilter("type", t.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                currentType === t.value
-                  ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                  : "bg-[#14141f] text-gray-400 border border-[#2d2d44] hover:border-violet-500/30 hover:text-white"
-              }`}
+              className={btnClass(currentType === t.value)}
             >
               {t.label}
             </button>
@@ -72,11 +75,7 @@ export default function FilterSidebar({ genres, yearRange }: Props) {
             <button
               key={genre}
               onClick={() => updateFilter("genre", genre)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                currentGenre === genre
-                  ? "bg-pink-500/20 text-pink-300 border border-pink-500/30"
-                  : "bg-[#14141f] text-gray-400 border border-[#2d2d44] hover:border-pink-500/30 hover:text-white"
-              }`}
+              className={btnClass(currentGenre === genre)}
             >
               {genre}
             </button>
@@ -94,11 +93,7 @@ export default function FilterSidebar({ genres, yearRange }: Props) {
               <button
                 key={year}
                 onClick={() => updateFilter("year", String(year))}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  currentYear === String(year)
-                    ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
-                    : "bg-[#14141f] text-gray-400 border border-[#2d2d44] hover:border-violet-500/30 hover:text-white"
-                }`}
+                className={btnClass(currentYear === String(year))}
               >
                 {year}
               </button>

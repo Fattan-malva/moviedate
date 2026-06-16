@@ -2,8 +2,4 @@ node_modules/
 .next/
 out/
 .env.local
-.env
 *.tsbuildinfo
-next-env.d.ts
-data/movies.json
-data/homepage.json

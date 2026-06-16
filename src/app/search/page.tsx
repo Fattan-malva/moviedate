@@ -1,9 +1,10 @@
-import { getAllMovies, getAllGenres } from "@/lib/data";
-import { getYearRange } from "@/lib/utils";
+import { getAllMovies, getAllGenres, getYearRange } from "@/lib/data";
 import SearchBar from "@/components/search/SearchBar";
 import FilterSidebar from "@/components/search/FilterSidebar";
 import FilterChips from "@/components/search/FilterChips";
 import SearchResults from "./SearchResults";
+
+export const dynamic = "force-dynamic";
 
 export default async function SearchPage({
   searchParams,

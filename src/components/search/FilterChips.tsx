@@ -11,7 +11,7 @@ export default function FilterChips() {
   const filters: { key: string; label: string; value: string }[] = [];
 
   const q = searchParams.get("q");
-  if (q) filters.push({ key: "q", label: `Search: "${q}"`, value: q });
+  if (q) filters.push({ key: "q", label: `"${q}"`, value: q });
 
   const type = searchParams.get("type");
   if (type && type !== "all") filters.push({ key: "type", label: `Type: ${type}`, value: type });
@@ -35,7 +35,7 @@ export default function FilterChips() {
       {filters.map((f) => (
         <span
           key={f.key}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-violet-500/10 text-violet-300 border border-violet-500/20"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-violet-500/10 text-violet-300 border border-violet-500/20 backdrop-blur-md"
         >
           {f.label}
           <button onClick={() => remove(f.key)} className="hover:text-white transition-colors">
