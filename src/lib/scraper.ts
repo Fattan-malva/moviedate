@@ -519,15 +519,19 @@ function extractSections($: cheerio.CheerioAPI): HomeSection[] {
   const nuxtItems = extractFromNuxtState();
   
   const sections: HomeSection[] = [];
+  const seenSlugs = new Set<string>();
 
   $(SECTION_SELECTOR).each((_, el) => {
     const root = $(el);
     const title = root.find(".title, h2, h3").first().text().trim();
     const items = extractItems($, root);
     if (!title || items.length === 0) return;
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    if (seenSlugs.has(slug)) return;
+    seenSlugs.add(slug);
     sections.push({
       name: title.replace(/More$/i, "").trim(),
-      slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+      slug,
       items,
     });
   });
