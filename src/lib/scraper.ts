@@ -25,43 +25,214 @@ import {
 const CARD_SELECTOR = "a.movie-card, a[href*='/detail/'], a[href*='/movies/'], .movie-card, [class*='movie-card'], .more-item, a[href*='/tv/']";
 const SECTION_SELECTOR = ".movie-card-list-box, .comp-box.has-content, section, .work-list > div, .content-list, [class*='movie-grid'], [class*='card-list'], [class*='item-list']";
 
+// ─── Nuxt 3 Payload Parser ──────────────────────────────────────────────────
+// The site uses Nuxt 3 __NUXT_DATA__: a flat JSON array where objects store
+// index references instead of inline values. We resolve these references to
+// reconstruct the original data structures.
+
+function resolveNuxtRef(arr: any[], idx: number, depth = 0): any {
+  if (depth > 20 || idx < 0 || idx >= arr.length) return undefined;
+  const val = arr[idx];
+  if (val === null || val === undefined) return val;
+  if (typeof val === "number" || typeof val === "string" || typeof val === "boolean") return val;
+  // ShallowReactive / ShallowRef / Ref wrapper: ["ShallowReactive", refIdx]
+  if (Array.isArray(val) && val.length === 2 && typeof val[0] === "string") {
+    return resolveNuxtRef(arr, val[1], depth + 1);
+  }
+  if (Array.isArray(val)) {
+    return val.map((i) => (typeof i === "number" ? resolveNuxtRef(arr, i, depth + 1) : i));
+  }
+  if (typeof val === "object") {
+    const result: any = {};
+    for (const [key, refIdx] of Object.entries(val)) {
+      result[key] = typeof refIdx === "number" ? resolveNuxtRef(arr, refIdx, depth + 1) : refIdx;
+    }
+    return result;
+  }
+  return val;
+}
+
+/** Parse __NUXT_DATA__ script tag and return the resolved flat array */
+function parseNuxtPayload(html: string): any[] | null {
+  const match = html.match(/<script[^>]*id="__NUXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch {
+    return null;
+  }
+}
+
+/** Extract all sections with subjects (movies) from Nuxt 3 payload */
+function extractSectionsFromNuxtPayload(html: string): { sections: HomeSection[]; hero: ContentItem[] } {
+  const arr = parseNuxtPayload(html);
+  if (!arr) return { sections: [], hero: [] };
+
+  const sections: HomeSection[] = [];
+  const hero: ContentItem[] = [];
+  const seenSlugs = new Set<string>();
+
+  // Find the root sections array — it's an array of indices pointing to section objects
+  // Each section object has: type, position, title, subjects, banner, etc.
+  for (let i = 0; i < arr.length; i++) {
+    const val = arr[i];
+    if (!val || typeof val !== "object" || Array.isArray(val)) continue;
+    if (!("subjects" in val) || !("title" in val)) continue;
+
+    const section = resolveNuxtRef(arr, i);
+    if (!section || !section.title) continue;
+
+    const sectionTitle = String(section.title);
+    const sectionSlug = sectionTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+    // Extract banner/hero items
+    if (section.banner?.items?.length > 0) {
+      for (const bannerItem of section.banner.items) {
+        const item = nuxtSubjectToContentItem(bannerItem.subject || bannerItem, bannerItem.detailPath || "");
+        if (item && item.thumbnail && !seenSlugs.has(item.slug)) {
+          // Ensure hero thumbnails are also proxied
+          if (item.thumbnail.includes("pbcdn") && !item.thumbnail.includes("/api/proxy")) {
+            item.thumbnail = getProxiedImageUrl(item.thumbnail);
+          }
+          seenSlugs.add(item.slug);
+          hero.push(item);
+        }
+      }
+    }
+
+    // Extract subjects (movie cards)
+    if (Array.isArray(section.subjects) && section.subjects.length > 0) {
+      const items: ContentItem[] = [];
+      for (const subject of section.subjects) {
+        const item = nuxtSubjectToContentItem(subject, subject.detailPath || "");
+        if (item && item.title && !seenSlugs.has(item.slug)) {
+          seenSlugs.add(item.slug);
+          items.push(item);
+        }
+      }
+      if (items.length > 0) {
+        sections.push({
+          name: sectionTitle.replace(/More$/i, "").trim(),
+          slug: sectionSlug,
+          items,
+        });
+      }
+    }
+  }
+
+  return { sections, hero };
+}
+
+/** Convert a Nuxt payload subject object to a ContentItem */
+function nuxtSubjectToContentItem(subject: any, detailPath?: string): ContentItem | null {
+  if (!subject || typeof subject !== "object") return null;
+
+  const title = subject.title || subject.name || "";
+  if (!title) return null;
+
+  // cover is an object with { url, width, height, ... }
+  let thumbnail = "";
+  const cover = subject.cover || subject.image || subject.poster;
+  if (cover && typeof cover === "object") {
+    thumbnail = cover.url || "";
+  } else if (typeof cover === "string") {
+    thumbnail = cover;
+  }
+
+  const slug = detailPath || subject.detailPath || subject.subjectId ||
+    title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  // Parse genres from comma-separated string
+  const genreStr = subject.genre || subject.genres || "";
+  const genres = typeof genreStr === "string" && genreStr.length > 0
+    ? genreStr.split(",").map((g: string) => g.trim()).filter(Boolean)
+    : Array.isArray(genreStr) ? genreStr : undefined;
+
+  return {
+    slug,
+    title,
+    thumbnail: getProxiedImageUrl(thumbnail),
+    rating: subject.imdbRatingValue || undefined,
+    year: parseYear(subject.releaseDate || "") || undefined,
+    genres,
+    type: subject.subjectType === 2 ? "movie" : subject.subjectType === 1 ? "tv-series" : undefined,
+    synopsis: subject.description || undefined,
+    duration: subject.duration ? String(subject.duration) : undefined,
+    country: subject.countryName || undefined,
+  };
+}
+
+/** Extract detail data from Nuxt 3 payload on a detail page */
+function extractDetailFromNuxtPayload(html: string, slug: string): DetailData | null {
+  const arr = parseNuxtPayload(html);
+  if (!arr) return null;
+
+  // Find the subject object with cover and title
+  for (let i = 0; i < arr.length; i++) {
+    const val = arr[i];
+    if (!val || typeof val !== "object" || Array.isArray(val)) continue;
+    if (!("cover" in val) || !("title" in val)) continue;
+
+    const subject = resolveNuxtRef(arr, i);
+    if (!subject || !subject.title) continue;
+
+    const cover = subject.cover || subject.image || subject.poster;
+    const thumbnail = (cover && typeof cover === "object") ? (cover.url || "") : (typeof cover === "string" ? cover : "");
+
+    if (!thumbnail || !thumbnail.includes("pbcdn")) continue;
+
+    const genreStr = subject.genre || "";
+    const genres = typeof genreStr === "string" && genreStr.length > 0
+      ? genreStr.split(",").map((g: string) => g.trim()).filter(Boolean)
+      : undefined;
+
+    // Extract cast from staffList
+    const cast = Array.isArray(subject.staffList)
+      ? subject.staffList.map((s: any) => ({
+          name: s.name || s.actorName || "",
+          role: s.role || s.characterName || "",
+          image: s.image?.url || s.avatar?.url || undefined,
+        })).filter((c: any) => c.name)
+      : undefined;
+
+    return {
+      slug: subject.detailPath || slug,
+      title: subject.title,
+      thumbnail: getProxiedImageUrl(thumbnail),
+      poster: getProxiedImageUrl(thumbnail),
+      type: subject.subjectType === 2 ? "movie" : "tv-series",
+      rating: subject.imdbRatingValue || undefined,
+      year: parseYear(subject.releaseDate || "") || undefined,
+      synopsis: subject.description || undefined,
+      genres,
+      duration: subject.duration ? String(subject.duration) : undefined,
+      country: subject.countryName || undefined,
+      cast,
+    };
+  }
+
+  return null;
+}
+
 async function fetchPage(path: string): Promise<cheerio.CheerioAPI> {
   const { data } = await httpClient.get<string>(path);
   return cheerio.load(data);
 }
 
+/** Fetch page and return both cheerio $ and raw HTML for Nuxt 3 payload parsing */
+async function fetchPageWithHtml(path: string): Promise<{ $: cheerio.CheerioAPI; html: string }> {
+  const { data } = await httpClient.get<string>(path);
+  return { $: cheerio.load(data), html: data };
+}
+
 // Server-only: Puppeteer is not available in Vercel serverless
-// Use HTTP-based fetching with fallback Nuxt state extraction
+// Use HTTP-based fetching with Nuxt 3 __NUXT_DATA__ payload extraction
 async function fetchPageDynamic(path: string): Promise<cheerio.CheerioAPI> {
   try {
-    // Use HTTP client - works on all serverless platforms
-    const $ = await fetchPage(path);
+    const { $, html } = await fetchPageWithHtml(path);
     
-    // Try to extract Nuxt state from HTML (works for SSR pages)
-    const html = $.html();
-    const nuxtMatch = html.match(/window\.__NUXT__\s*=\s*(\{[\s\S]*?\});\s*<\/script>/);
-    if (nuxtMatch) {
-      try {
-        const nuxtRaw = nuxtMatch[1];
-        // Parse Nuxt state
-        const nuxtParsed = nuxtRaw
-          .replace(/function\s*\([^)]*\)\s*\{[\s\S]*?\}/g, "null")  // Remove functions
-          .replace(/,(\s*[}\]])/g, "$1");  // Remove trailing commas
-        
-        const nuxtObj = JSON.parse(nuxtParsed);
-        (globalThis as any).__MOVIBOX_NUXT_DATA__ = nuxtObj?.data || null;
-        (globalThis as any).__MOVIBOX_NUXT_STATE__ = nuxtObj?.state || null;
-      } catch {
-        // Ignore parse errors
-      }
-    }
-    
-    // Check if HTML has enough images - if not, Nuxt didn't SSR properly
-    const imgCount = $("img").length;
-    if (imgCount < 3) {
-      // Try direct image extraction from Nuxt JSON in HTML
-      extractNuxtFromHtml($, html);
-    }
+    // Store raw HTML for Nuxt 3 payload extraction
+    (globalThis as any).__MOVIBOX_RAW_HTML__ = html;
     
     return $;
   } catch {
@@ -69,7 +240,9 @@ async function fetchPageDynamic(path: string): Promise<cheerio.CheerioAPI> {
   }
 }
 
-// Extract Nuxt data from raw HTML (no browser needed)
+// ─── Legacy Nuxt 2 extraction (kept as fallback) ────────────────────────────
+
+// Extract Nuxt data from raw HTML (legacy Nuxt 2 format)
 function extractNuxtFromHtml($: cheerio.CheerioAPI, html: string) {
   const nuxtItems: ContentItem[] = [];
   
@@ -501,23 +674,19 @@ function extractItems($: cheerio.CheerioAPI, root?: cheerio.Cheerio<Element>): C
     if (item && isValidMovieItem(item)) items.push(item);
   });
   
-  // Add items from Nuxt state if HTML extraction found too few
-  if (items.length < 3) {
-    const nuxtItems = extractFromNuxtState().filter(isValidMovieItem);
-    for (const item of nuxtItems) {
-      if (!items.some(i => i.slug === item.slug)) {
-        items.push(item);
-      }
-    }
-  }
-  
   return uniqueItems(items);
 }
 
 function extractSections($: cheerio.CheerioAPI): HomeSection[] {
-  // First try Nuxt state for most accurate data
-  const nuxtItems = extractFromNuxtState();
+  // Primary: Use Nuxt 3 __NUXT_DATA__ payload (has images)
+  const rawHtml = (globalThis as any).__MOVIBOX_RAW_HTML__ || $.html();
+  const nuxtResult = extractSectionsFromNuxtPayload(rawHtml);
   
+  if (nuxtResult.sections.length > 0) {
+    return nuxtResult.sections;
+  }
+  
+  // Fallback: HTML scraping (no images on this site)
   const sections: HomeSection[] = [];
   const seenSlugs = new Set<string>();
 
@@ -536,12 +705,8 @@ function extractSections($: cheerio.CheerioAPI): HomeSection[] {
     });
   });
 
-  // If Nuxt state has items and sections have no title, use Nuxt data
-  if (sections.length === 0 && nuxtItems.length > 0) {
-    return [{ name: "All Movies", slug: "all-movies", items: uniqueItems(nuxtItems) }];
-  }
-
   // Add Nuxt items to sections if they're missing
+  const nuxtItems = extractFromNuxtState();
   if (nuxtItems.length > 0) {
     const existingSlugs = new Set(sections.flatMap(s => s.items.map(i => i.slug)));
     const newItems = nuxtItems.filter(i => !existingSlugs.has(i.slug));
@@ -572,30 +737,35 @@ export async function getHome(): Promise<HomeData> {
   const sections = extractSections($);
   const allItems = uniqueItems(sections.flatMap((section) => section.items));
 
-  // Extract hero/banner items
-  const heroItems: ContentItem[] = [];
-  $(".banner-bg-item, .hero-backdrop, .banner-slide, [class*='banner'] [class*='slide']").each((_, el) => {
-    const $el = $(el);
-    const href = $el.find("a").first().attr("href") || $el.closest("a").attr("href") || "";
-    const imgEl = $el.find("img").first();
-    const srcset = imgEl.attr("srcset") || "";
-    const srcsetUrl = srcset.split(",").map((s) => s.trim().split(/\s+/)[0]).filter(Boolean).at(-1);
-    const image = imgEl.attr("src") || imgEl.attr("data-src") || srcsetUrl || "";
-    // If no img src, try background style
-    const style = $el.attr("style") || $el.find("[style*='background']").first().attr("style") || "";
-    const bgUrl = backdropFromStyle(style);
-    const finalImg = image || bgUrl || "";
-    const title = $el.find(".title, .card-title, h2, h3").first().text().trim() ||
-      imgEl.attr("alt")?.trim() || "";
-    
-    if (href || finalImg) {
-      heroItems.push({
-        slug: slugFromHref(href),
-        title,
-        thumbnail: getProxiedImageUrl(resolveImageUrl(finalImg, getDomain())),
-      });
-    }
-  });
+  // Primary: Use Nuxt 3 payload hero items (has images)
+  const rawHtml = (globalThis as any).__MOVIBOX_RAW_HTML__ || $.html();
+  const nuxtResult = extractSectionsFromNuxtPayload(rawHtml);
+  const heroItems = nuxtResult.hero.length > 0 ? nuxtResult.hero : [];
+
+  // Fallback: HTML banner extraction
+  if (heroItems.length === 0) {
+    $(".banner-bg-item, .hero-backdrop, .banner-slide, [class*='banner'] [class*='slide']").each((_, el) => {
+      const $el = $(el);
+      const href = $el.find("a").first().attr("href") || $el.closest("a").attr("href") || "";
+      const imgEl = $el.find("img").first();
+      const srcset = imgEl.attr("srcset") || "";
+      const srcsetUrl = srcset.split(",").map((s) => s.trim().split(/\s+/)[0]).filter(Boolean).at(-1);
+      const image = imgEl.attr("src") || imgEl.attr("data-src") || srcsetUrl || "";
+      const style = $el.attr("style") || $el.find("[style*='background']").first().attr("style") || "";
+      const bgUrl = backdropFromStyle(style);
+      const finalImg = image || bgUrl || "";
+      const title = $el.find(".title, .card-title, h2, h3").first().text().trim() ||
+        imgEl.attr("alt")?.trim() || "";
+      
+      if (href || finalImg) {
+        heroItems.push({
+          slug: slugFromHref(href),
+          title,
+          thumbnail: getProxiedImageUrl(resolveImageUrl(finalImg, getDomain())),
+        });
+      }
+    });
+  }
 
   return {
     hero: heroItems.length > 0 ? uniqueItems(heroItems) : allItems.slice(0, 12),
@@ -641,6 +811,19 @@ export async function search(query: string, page = 1): Promise<ListResponse<Cont
 export async function getDetail(slug: string): Promise<DetailData> {
   const path = slug.startsWith("/") ? slug : `/detail/${slug}`;
   const $ = await fetchPageDynamic(path);
+  
+  // Primary: Use Nuxt 3 payload (has images)
+  const rawHtml = (globalThis as any).__MOVIBOX_RAW_HTML__ || $.html();
+  const nuxtDetail = extractDetailFromNuxtPayload(rawHtml, slug);
+  if (nuxtDetail) {
+    // Still extract episodes and stream servers from HTML
+    nuxtDetail.episodes = extractEpisodes($);
+    nuxtDetail.streamServers = extractStreamServers($);
+    nuxtDetail.relatedContent = extractItems($);
+    return nuxtDetail;
+  }
+  
+  // Fallback: HTML scraping
   const title = $(".pc-sub-title, h1").first().text().trim() || $("meta[property='og:title']").attr("content") || "";
   const description = $("meta[name='description']").attr("content") || $(".desc, .description, .synopsis").first().text().trim();
   

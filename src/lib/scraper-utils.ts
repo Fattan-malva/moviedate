@@ -96,8 +96,12 @@ export function getProxiedImageUrl(absoluteImageUrl: string): string {
     return absoluteImageUrl;
   }
 
-  // Return the absolute URL directly — next.config.ts already allows all remote image hosts.
-  // Proxying through /api/proxy-image is only needed if the source blocks hotlinking.
+  // Proxy pbcdn images through our API to avoid hotlinking blocks
+  if (absoluteImageUrl.includes("pbcdn")) {
+    return `/api/proxy-image?url=${encodeURIComponent(absoluteImageUrl)}`;
+  }
+
+  // Return other URLs directly
   return absoluteImageUrl;
 }
 
