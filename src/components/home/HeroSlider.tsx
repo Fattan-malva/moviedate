@@ -49,7 +49,7 @@ export default function HeroSlider({ items }: Props) {
     <section className="relative h-[50vh] md:h-[70vh] min-h-[400px] overflow-hidden rounded-b-2xl">
       {items.map((m, i) => (
         <div
-          key={m.id}
+          key={m.slug || i}
           className={`absolute inset-0 transition-all duration-700 ease-in-out ${
             i === current
               ? "opacity-100 scale-100"
@@ -125,7 +125,7 @@ export default function HeroSlider({ items }: Props) {
                     ? "bg-violet-500 w-8"
                     : "bg-white/30 hover:bg-white/50 w-1.5"
                 }`}
-                aria-label={`Go to slide ${i + 1}`}
+                  aria-label={`Slide ${i + 1}`}
               />
             ))}
           </div>

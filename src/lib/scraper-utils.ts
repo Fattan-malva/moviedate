@@ -91,31 +91,14 @@ export function resolveImageUrl(src: string, baseUrl: string): string {
 export function getProxiedImageUrl(absoluteImageUrl: string): string {
   if (!absoluteImageUrl) return "";
 
-  // Determine the app's origin. Use NEXT_PUBLIC_APP_URL from env, or fallback.
-  // This is crucial for server-side rendering and API routes.
-  const appOrigin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
   // If it's a data URL, return it directly
   if (absoluteImageUrl.startsWith("data:")) {
     return absoluteImageUrl;
   }
 
-  // Check if the image is already served from our domain.
-  // This prevents unnecessary proxying for images already on our CDN or served locally.
-  try {
-    const imageUrlOrigin = new URL(absoluteImageUrl).origin;
-    if (imageUrlOrigin === new URL(appOrigin).origin) {
-      return absoluteImageUrl;
-    }
-  } catch (e) {
-    // If URL parsing fails, it might be an invalid URL, log and proceed to proxy.
-    console.error("Error parsing image URL origin:", e);
-  }
-
-  // Otherwise, construct and return the proxy URL
-  const proxyUrl = new URL("/api/proxy-image", appOrigin);
-  proxyUrl.searchParams.set("url", absoluteImageUrl);
-  return proxyUrl.href;
+  // Return the absolute URL directly — next.config.ts already allows all remote image hosts.
+  // Proxying through /api/proxy-image is only needed if the source blocks hotlinking.
+  return absoluteImageUrl;
 }
 
 export function getTextBetweenMarkers(

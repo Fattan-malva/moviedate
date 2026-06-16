@@ -1,4 +1,4 @@
-import { getHomepage } from "@/lib/data";
+import { getHomepage, getAllMovies } from "@/lib/data";
 import HeroSlider from "@/components/home/HeroSlider";
 import CategoryRow from "@/components/home/CategoryRow";
 

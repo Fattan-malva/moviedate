@@ -22,12 +22,188 @@ import {
   resolveUrl,
 } from "./scraper-utils";
 
-const CARD_SELECTOR = "a[href^='/detail/'], a[href*='/detail/']";
-const SECTION_SELECTOR = ".movie-card-list-box, .comp-box.has-content, section, .work-list > div";
+const CARD_SELECTOR = "a.movie-card, a[href*='/detail/'], a[href*='/movies/'], .movie-card, [class*='movie-card'], .more-item, a[href*='/tv/']";
+const SECTION_SELECTOR = ".movie-card-list-box, .comp-box.has-content, section, .work-list > div, .content-list, [class*='movie-grid'], [class*='card-list'], [class*='item-list']";
 
 async function fetchPage(path: string): Promise<cheerio.CheerioAPI> {
   const { data } = await httpClient.get<string>(path);
   return cheerio.load(data);
+}
+
+async function fetchPageDynamic(path: string): Promise<cheerio.CheerioAPI> {
+  try {
+    const { fetchPageWithBrowser } = await import("./browser-scraper");
+    const result = await fetchPageWithBrowser(path);
+    
+    (globalThis as any).__MOVIBOX_NUXT_DATA__ = result.nuxtData;
+    (globalThis as any).__MOVIBOX_NUXT_STATE__ = result.nuxtState;
+    
+    return cheerio.load(result.html || "<html></html>");
+  } catch {
+    return fetchPage(path);
+  }
+}
+
+// Extract movie items from Nuxt state JSON (most reliable)
+function extractFromNuxtState(): ContentItem[] {
+  const items: ContentItem[] = [];
+  const seen = new Set<string>();
+  
+  const nuxtData = (globalThis as any).__MOVIBOX_NUXT_DATA__;
+  const nuxtState = (globalThis as any).__MOVIBOX_NUXT_STATE__;
+  
+  function deepExtract(obj: any, depth = 0) {
+    if (!obj || typeof obj !== "object" || depth > 10) return;
+    if (Array.isArray(obj)) {
+      for (const item of obj) {
+        const movie = extractMovieFromObject(item);
+        if (movie && movie.title && movie.thumbnail && !seen.has(movie.slug || movie.title)) {
+          seen.add(movie.slug || movie.title);
+          items.push(movie);
+        }
+        // Recurse into array items
+        if (depth < 5) deepExtract(item, depth + 1);
+      }
+    } else {
+      // Check nested properties
+      const nestedArrays = ["data", "list", "items", "movies", "result", "homeData", "banner", "hotList", "newList", "recommend"];
+      for (const key of nestedArrays) {
+        if (obj[key]) {
+          if (Array.isArray(obj[key])) {
+            for (const item of obj[key]) {
+              const movie = extractMovieFromObject(item);
+              if (movie && movie.title && movie.thumbnail && !seen.has(movie.slug || movie.title)) {
+                seen.add(movie.slug || movie.title);
+                items.push(movie);
+              }
+            }
+          } else {
+            deepExtract(obj[key], depth + 1);
+          }
+        }
+      }
+    }
+  }
+  
+  // Extract from data arrays
+  if (nuxtData) {
+    if (Array.isArray(nuxtData)) {
+      deepExtract(nuxtData);
+    } else if (typeof nuxtData === "object") {
+      deepExtract(nuxtData);
+    }
+  }
+  
+  // Extract from state
+  if (nuxtState && typeof nuxtState === "object") {
+    deepExtract(nuxtState);
+  }
+  
+  return items;
+}
+
+function extractMovieFromObject(obj: any): ContentItem | null {
+  if (!obj || typeof obj !== "object") return null;
+  
+  // Try to find the actual movie data object (Nuxt wraps data differently)
+  const data = obj.data || obj;
+  
+  const id = data.id || data._id || data.movieId || data.vodId || data.cid || "";
+  const title = data.title || data.name || data.vodName || data.movieName || data.vodTitle || "";
+  
+  // Image fields - check many variations
+  const imageFields = [
+    data.poster,
+    data.cover,
+    data.thumbnail,
+    data.thumb,
+    data.img,
+    data.image,
+    data.latestThumbnail,
+    data.pic,
+    data.picUrl,
+    data.thumbUrl,
+    data.posterUrl,
+    data.coverUrl,
+    data.vodPic,
+    data.type_pic,
+    data.cat_icon,
+    // Nested structures
+    data.images?.poster,
+    data.images?.cover,
+    data.images?.thumbnail,
+    data.images?.[0],
+    data.imageList?.[0],
+    data.pics?.[0],
+    data.thumbnails?.[0],
+    data.poster_thumb,
+    data.thumb_pic,
+  ];
+  
+  let cover = "";
+  for (const f of imageFields) {
+    if (f && typeof f === "string" && f.length > 5 && !f.includes("undefined")) {
+      cover = f;
+      break;
+    }
+  }
+  
+  // Also check for full URL in data.src or data.href
+  const urlFields = [data.src, data.href, data.url, data.link, data.detailUrl, data.slugUrl, data.shareUrl];
+  let href = "";
+  for (const f of urlFields) {
+    if (f && typeof f === "string" && f.length > 5) {
+      href = f;
+      break;
+    }
+  }
+  
+  const rating = data.rating || data.score || data.star || data.imdb || data.vod_score || data.favorite || "";
+  const year = data.year || data.releaseYear || data.createTime || data.updateTime || data.pubDate || "";
+  
+  // Extract genres/categories
+  const genreFields = [
+    data.genres,
+    data.category,
+    data.categories,
+    data.tags,
+    data.type,
+    data.typeName,
+    data.vodType,
+    data.vodClass,
+  ];
+  
+  let genres: string[] | undefined;
+  for (const f of genreFields) {
+    if (Array.isArray(f) && f.length > 0) {
+      genres = f.map(g => typeof g === "string" ? g : g.name || g.title || "").filter(Boolean);
+      break;
+    } else if (typeof f === "string" && f.length > 0 && f.length < 50) {
+      genres = f.split(",").map(g => g.trim()).filter(Boolean);
+      break;
+    }
+  }
+  
+  if (!title && !id) return null;
+  
+  let slug = "";
+  if (href) {
+    slug = slugFromHref(href);
+  } else if (id) {
+    slug = String(id);
+  } else {
+    slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  }
+  
+  return {
+    slug,
+    title,
+    thumbnail: resolveImageUrl(cover, getDomain()),
+    rating: parseRating(String(rating)) || undefined,
+    year: parseYear(String(year)) || undefined,
+    genres,
+    type: data.type || (href?.includes("/tv") ? "tv-series" : href?.includes("/animated") ? "animation" : "movie"),
+  };
 }
 
 function slugFromHref(href: string): string {
@@ -38,58 +214,146 @@ function slugFromHref(href: string): string {
 
 function imageFromElement($: cheerio.CheerioAPI, root: cheerio.Cheerio<Element>): string {
   const img = root.is("img") ? root : root.find("img").first();
+  
+  const attrs = [
+    "data-nuxt-img",
+    "data-nuxt-img-src",
+    "data-src",
+    "data-lazy-src",
+    "data-original",
+    "data-bg",
+    "src",
+  ];
+  
+  for (const attr of attrs) {
+    const val = img.attr(attr);
+    if (val && !val.startsWith("data:") && val.length > 5) {
+      return val;
+    }
+  }
+  
   const srcset = img.attr("srcset") || img.attr("data-srcset") || "";
-  const srcsetUrl = srcset
+  const srcsetUrls = srcset
     .split(",")
     .map((entry) => entry.trim().split(/\s+/)[0])
-    .filter(Boolean)
-    .at(-1);
+    .filter(Boolean);
+  
+  for (const url of srcsetUrls) {
+    if (url.startsWith("http") && url.match(/\.(jpg|jpeg|png|webp)/i)) {
+      return url;
+    }
+  }
+  
   const style = root.attr("style") || root.find("[style*='background']").first().attr("style") || "";
-  const bgUrl = style.match(/url\((['"]?)(.*?)\1\)/)?.[2];
+  const bgUrl = backdropFromStyle(style);
+  if (bgUrl) return bgUrl;
+  
+  // Check parent for background image
+  const parentStyle = root.parent()?.attr("style") || "";
+  return backdropFromStyle(parentStyle);
+}
 
-  return (
-    img.attr("src") ||
-    img.attr("data-src") ||
-    img.attr("data-original") ||
-    img.attr("data-lazy-src") ||
-    img.attr("data-nuxt-img") ||
-    srcsetUrl ||
-    bgUrl ||
-    ""
-  );
+function backdropFromStyle(style: string): string {
+  const match = style.match(/url\(['"]?([^'")\s]+)['"]?\)/);
+  return match?.[1] || "";
 }
 
 function titleFromCard($: cheerio.CheerioAPI, el: Element): string {
   const card = $(el);
   return (
-    card.attr("title")?.trim() ||
-    card.attr("aria-label")?.trim() ||
-    card.find("[title]").first().attr("title")?.trim() ||
-    card.find("img[alt]").first().attr("alt")?.trim() ||
     card.find(".card-title, .title, h3, h2").first().text().trim() ||
+    card.find("img[alt]").first().attr("alt")?.trim() ||
+    card.attr("aria-label")?.trim() ||
+    card.attr("title")?.trim() ||
     card.text().replace(/★\s*[\d.]+/g, "").replace(/\b(19|20)\d{2}\b/g, "").trim()
   );
 }
 
 function itemFromCard($: cheerio.CheerioAPI, el: Element): ContentItem | null {
   const card = $(el);
-  const href = card.attr("href") || card.find("a").first().attr("href") || "";
+  const $card = card.is("a") ? card : card.find("a").first();
+  const href = $card.attr("href") || card.filter("a").attr("href") || "";
   const slug = slugFromHref(href);
-  const title = titleFromCard($, el);
-  if (!href || !slug || !title) return null;
+  
+  // Get title from various possible locations
+  const title = 
+    card.find(".card-title, .title, .movie-title, h3").first().text().trim() ||
+    card.find("img[alt]").first().attr("alt")?.trim() ||
+    card.attr("aria-label")?.trim() ||
+    card.attr("title")?.trim() ||
+    card.find(".more-name").first().text().trim() ||
+    $card.find(".card-title, .title").first().text().trim() ||
+    "";
+  
+  if (!slug && !href) return null;
+  if (!title && !slug) return null;
+
+  // Get thumbnail from various possible locations
+  const imgEl = card.find("img").first();
+  
+  // NuxtImg lazy-loading: check data attributes first
+  const imageAttrs = [
+    "data-nuxt-img",
+    "data-nuxt-img-src",
+    "data-src",
+    "data-lazy-src",
+    "data-original",
+    "data-bg",
+    "src",
+  ];
+  
+  let thumbnailUrl = "";
+  for (const attr of imageAttrs) {
+    const val = imgEl.attr(attr);
+    if (val && !val.startsWith("data:") && val.length > 5) {
+      thumbnailUrl = val;
+      break;
+    }
+  }
+  
+  // Fallback to srcset
+  if (!thumbnailUrl) {
+    const srcset = imgEl.attr("srcset") || imgEl.attr("data-srcset") || "";
+    const srcsetUrls = srcset.split(",").map(s => s.trim().split(/\s+/)[0]).filter(Boolean);
+    thumbnailUrl = srcsetUrls.find(url => url.match(/\.(jpg|jpeg|png|webp)/i)) || "";
+  }
+  
+  // Fallback to background image
+  if (!thumbnailUrl) {
+    const imgStyle = card.find("[style*='background']").first().attr("style") || "";
+    thumbnailUrl = backdropFromStyle(imgStyle) || "";
+  }
+  
+  // Fallback to cover wrap background (for cards with lazy images)
+  if (!thumbnailUrl) {
+    const coverWrap = card.find(".cover-wrap, .cover, .img-wrap, [class*='cover']").first();
+    const coverStyle = coverWrap.attr("style") || "";
+    thumbnailUrl = backdropFromStyle(coverStyle) || "";
+  }
+  
+  const thumbnail = getProxiedImageUrl(
+    resolveImageUrl(thumbnailUrl, getDomain())
+  );
 
   const text = card.text().replace(/\s+/g, " ").trim();
-  const genreText = card.find(".genre, .categories, .tag-list").first().text().trim();
-   const thumbnail = getProxiedImageUrl(resolveImageUrl(imageFromElement($, card), getDomain()));
+  const genreText = card.find(".genre, .categories, .tag-list, .type-item").first().text().trim();
+  const ratingText = card.find(".rating, .score, .imdb-badge").first().text().trim() || 
+    parseRating(text) || "";
+  
+  // Determine type from URL
+  const type = 
+    href.includes("/tv") ? "tv-series" : 
+    href.includes("/animated") ? "animation" : 
+    href.includes("/movie") ? "movie" : undefined;
 
   return {
-    slug,
+    slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     title,
     thumbnail,
-    rating: parseRating(text),
+    rating: parseRating(ratingText) || undefined,
     year: parseYear(text),
     genres: genreText ? parseGenres(genreText) : undefined,
-    type: href.includes("/tv") ? "tv-series" : href.includes("animated") ? "animation" : "movie",
+    type,
   };
 }
 
@@ -110,10 +374,24 @@ function extractItems($: cheerio.CheerioAPI, root?: cheerio.Cheerio<Element>): C
     const item = itemFromCard($, el);
     if (item) items.push(item);
   });
+  
+  // Add items from Nuxt state if HTML extraction found too few
+  if (items.length < 3) {
+    const nuxtItems = extractFromNuxtState();
+    for (const item of nuxtItems) {
+      if (!items.some(i => i.slug === item.slug)) {
+        items.push(item);
+      }
+    }
+  }
+  
   return uniqueItems(items);
 }
 
 function extractSections($: cheerio.CheerioAPI): HomeSection[] {
+  // First try Nuxt state for most accurate data
+  const nuxtItems = extractFromNuxtState();
+  
   const sections: HomeSection[] = [];
 
   $(SECTION_SELECTOR).each((_, el) => {
@@ -128,9 +406,18 @@ function extractSections($: cheerio.CheerioAPI): HomeSection[] {
     });
   });
 
-  if (sections.length === 0) {
-    const items = extractItems($);
-    if (items.length) sections.push({ name: "All", slug: "all", items });
+  // If Nuxt state has items and sections have no title, use Nuxt data
+  if (sections.length === 0 && nuxtItems.length > 0) {
+    return [{ name: "All Movies", slug: "all-movies", items: uniqueItems(nuxtItems) }];
+  }
+
+  // Add Nuxt items to sections if they're missing
+  if (nuxtItems.length > 0) {
+    const existingSlugs = new Set(sections.flatMap(s => s.items.map(i => i.slug)));
+    const newItems = nuxtItems.filter(i => !existingSlugs.has(i.slug));
+    if (newItems.length > 0) {
+      sections.push({ name: "Recommended", slug: "recommended", items: newItems });
+    }
   }
 
   const allItems = extractItems($);
@@ -151,20 +438,45 @@ function pagination($: cheerio.CheerioAPI, currentPage: number): Pick<ListRespon
 }
 
 export async function getHome(): Promise<HomeData> {
-  const $ = await fetchPage("/");
+  const $ = await fetchPageDynamic("/");
   const sections = extractSections($);
   const allItems = uniqueItems(sections.flatMap((section) => section.items));
 
+  // Extract hero/banner items
+  const heroItems: ContentItem[] = [];
+  $(".banner-bg-item, .hero-backdrop, .banner-slide, [class*='banner'] [class*='slide']").each((_, el) => {
+    const $el = $(el);
+    const href = $el.find("a").first().attr("href") || $el.closest("a").attr("href") || "";
+    const imgEl = $el.find("img").first();
+    const srcset = imgEl.attr("srcset") || "";
+    const srcsetUrl = srcset.split(",").map((s) => s.trim().split(/\s+/)[0]).filter(Boolean).at(-1);
+    const image = imgEl.attr("src") || imgEl.attr("data-src") || srcsetUrl || "";
+    // If no img src, try background style
+    const style = $el.attr("style") || $el.find("[style*='background']").first().attr("style") || "";
+    const bgUrl = backdropFromStyle(style);
+    const finalImg = image || bgUrl || "";
+    const title = $el.find(".title, .card-title, h2, h3").first().text().trim() ||
+      imgEl.attr("alt")?.trim() || "";
+    
+    if (href || finalImg) {
+      heroItems.push({
+        slug: slugFromHref(href),
+        title,
+        thumbnail: getProxiedImageUrl(resolveImageUrl(finalImg, getDomain())),
+      });
+    }
+  });
+
   return {
-    hero: allItems.slice(0, 12),
-    trending: sections.filter((section) => /trend|hot|most/i.test(section.name)),
+    hero: heroItems.length > 0 ? uniqueItems(heroItems) : allItems.slice(0, 12),
+    trending: sections.filter((section) => /trend|hot|most|watch/i.test(section.name)),
     latest: sections.filter((section) => /latest|recent|new/i.test(section.name)),
     sections,
   };
 }
 
 export async function getTrending(): Promise<ListResponse<ContentItem>> {
-  const $ = await fetchPage("/ranking-list");
+  const $ = await fetchPageDynamic("/ranking-list");
   return { items: extractItems($), ...pagination($, 1) };
 }
 
@@ -198,31 +510,65 @@ export async function search(query: string, page = 1): Promise<ListResponse<Cont
 
 export async function getDetail(slug: string): Promise<DetailData> {
   const path = slug.startsWith("/") ? slug : `/detail/${slug}`;
-  const $ = await fetchPage(path);
-  const title = $("h1").first().text().trim() || $("meta[property='og:title']").attr("content") || "";
+  const $ = await fetchPageDynamic(path);
+  const title = $(".pc-sub-title, h1").first().text().trim() || $("meta[property='og:title']").attr("content") || "";
   const description = $("meta[name='description']").attr("content") || $(".desc, .description, .synopsis").first().text().trim();
-  const image =
-    $("meta[property='og:image']").attr("content") ||
-    $(".cover img, .poster img, img").first().attr("src") ||
-    "";
+  
+  // Extract poster/cover image
+  const posterImage =
+    $(".pc-detail-cover img, .cover img, .poster img").first().attr("src") ||
+    $("meta[property='og:image']").attr("content") || "";
+  
+  // Extract backdrop image from style
+  const backdropStyle = $(".hero-backdrop, .backdrop, [class*='backdrop']").first().attr("style") || "";
+  const backdropImage = backdropFromStyle(backdropStyle) || "";
+  
+  const image = posterImage || backdropImage;
   const bodyText = $("body").text().replace(/\s+/g, " ").trim();
-  const genres = $("a[href*='genre'], .genre a, .tag-list a")
+  
+  // Extract genres/tags from type-item elements
+  const genres = $(".type-item, a[href*='genre'], .genre a, .tag-list a")
     .map((_, el) => $(el).text().trim())
     .get()
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(g => g.length < 30); // Filter out long text
+  
+  // Extract cast/actors
+  const cast: { name: string; role?: string; image?: string }[] = [];
+  $(".starring-name, .staff-item, .cast-item, [class*='actor']").each((_, el) => {
+    const name = $(el).find(".starring-name, .name, [class*='name']").first().text().trim();
+    const role = $(el).find(".role, [class*='role']").first().text().trim();
+    const imgEl = $(el).find("img").first();
+    const img = imgEl.attr("src") || imgEl.attr("data-src") || "";
+    if (name) {
+      cast.push({ name, role: role || undefined, image: img || undefined });
+    }
+  });
+  
+  // Extract meta info: year, duration, country
+  const metaText = $(".meta-item, .meta-row, [class*='meta']").first().text().replace(/\s+/g, " ").trim();
+  const year = parseYear(metaText) || parseYear(bodyText);
+  
+  // Extract rating from rating elements
+  const ratingText = $(".rating-score, .score, [class*='rating']").first().text().trim() || parseRating(bodyText) || "";
+  
+  // Get video URL from meta tags
+  const videoUrl = $("meta[name='video']").attr("content") || 
+    $("meta[property='og:video']").attr("content") || "";
 
   return {
     slug,
     title,
     thumbnail: getProxiedImageUrl(resolveImageUrl(image, getDomain())),
-    poster: getProxiedImageUrl(resolveImageUrl(image, getDomain())),
-    rating: parseRating(bodyText),
-    year: parseYear(bodyText),
+    poster: getProxiedImageUrl(resolveImageUrl(posterImage, getDomain())),
+    rating: ratingText || parseRating(bodyText),
+    year,
     synopsis: description,
-    genres: genres.length ? [...new Set(genres)] : undefined,
+    genres: genres.length ? [...new Set(genres)].slice(0, 10) : undefined,
     episodes: extractEpisodes($),
     streamServers: extractStreamServers($),
     relatedContent: extractItems($),
+    cast: cast.length > 0 ? cast : undefined,
   };
 }
 
@@ -232,20 +578,40 @@ export async function getEpisodeList(slug: string): Promise<Episode[]> {
 }
 
 export async function getEpisodeDetail(slug: string): Promise<EpisodeDetail> {
-  const path = slug.startsWith("/") ? slug : `/video/${slug}`;
-  const $ = await fetchPage(path);
-  const servers = extractStreamServers($);
-  return {
-    videoUrl: servers.at(0)?.url || $("video source, video").first().attr("src"),
-    streamServers: servers,
-    prev: $("a[href*='prev'], .prev a").first().attr("href"),
-    next: $("a[href*='next'], .next a").first().attr("href"),
-    episodes: extractEpisodes($),
-  };
+  // Try both /video/ and /movies/ paths for player page
+  const paths = [slug.startsWith("/") ? slug : `/video/${slug}`, `/movies/${slug}`];
+  
+  for (const path of paths) {
+    try {
+      const $ = await fetchPage(path);
+      const servers = extractStreamServers($);
+      
+      // Get video URL from video element or source tag
+      const videoUrl = 
+        $("video").first().attr("src") ||
+        $("video source").first().attr("src") ||
+        $("iframe[src*='player'], iframe[src*='video']").first().attr("src") ||
+        servers.at(0)?.url || "";
+      
+      if (videoUrl || servers.length > 0) {
+        return {
+          videoUrl: resolveUrl(videoUrl, getDomain()),
+          streamServers: servers,
+          prev: $("a[href*='prev'], .prev a, a[rel='prev']").first().attr("href"),
+          next: $("a[href*='next'], .next a, a[rel='next']").first().attr("href"),
+          episodes: extractEpisodes($),
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+  
+  return { videoUrl: undefined, streamServers: [], episodes: [] };
 }
 
 export async function getGenres(): Promise<Genre[]> {
-  const $ = await fetchPage("/tv-series");
+  const $ = await fetchPageDynamic("/tv-series");
   const genres: Genre[] = [];
   $("a[href*='genre'], a[href*='genres'], .filter a, .category a").each((_, el) => {
     const name = $(el).text().trim();
@@ -258,7 +624,7 @@ export async function getGenres(): Promise<Genre[]> {
 
 export async function getGenre(slug: string, page = 1): Promise<GenrePageData> {
   const path = `/${slug}${page > 1 ? `?page=${page}` : ""}`;
-  const $ = await fetchPage(path);
+  const $ = await fetchPageDynamic(path);
   const items = extractItems($);
   const pageInfo = pagination($, page);
   return {
@@ -271,26 +637,89 @@ export async function getGenre(slug: string, page = 1): Promise<GenrePageData> {
 
 function extractEpisodes($: cheerio.CheerioAPI): Episode[] {
   const episodes: Episode[] = [];
-  $("a[href*='/video/'], a[href*='episode'], .episode a").each((_, el) => {
-    const href = $(el).attr("href") || "";
-    const text = $(el).text().replace(/\s+/g, " ").trim();
-    if (!href) return;
-    episodes.push({
-      slug: slugFromHref(href),
-      number: text.match(/\d+/)?.[0] ?? String(episodes.length + 1),
-      title: text || undefined,
+  
+  // Handle various episode link patterns
+  const episodeSelectors = [
+    "a[href*='/video/']",
+    "a[href*='/episode/']",
+    "a[href*='episode']",
+    ".episode a",
+    ".type-item a",
+    "[class*='episode'] a",
+    ".resource-container a",
+    ".episodes-list a",
+    ".episode-list a",
+    ".type-tab-container a"
+  ];
+  
+  const seen = new Set<string>();
+  
+  for (const selector of episodeSelectors) {
+    $(selector).each((_, el) => {
+      const $el = $(el);
+      let href = $el.attr("href") || "";
+      let text = $el.text().replace(/\s+/g, " ").trim();
+      
+      if (!href) return;
+      
+      // Extract episode number from text or slug
+      const episodeNum = text.match(/\d+/)?.[0] || 
+        href.match(/[_-]?episode[_-]?(\d+)/i)?.[1] ||
+        href.match(/[_-]?ep[_-]?(\d+)/i)?.[1] ||
+        href.match(/\/(\d+)(?:\/|$)/)?.[1];
+      
+      const slug = slugFromHref(href);
+      if (seen.has(slug)) return;
+      seen.add(slug);
+      
+      episodes.push({
+        slug,
+        number: episodeNum || String(episodes.length + 1),
+        title: text || undefined,
+      });
     });
-  });
-  return [...new Map(episodes.map((episode) => [episode.slug, episode])).values()];
+  }
+  
+  return episodes;
 }
 
 function extractStreamServers($: cheerio.CheerioAPI): StreamServer[] {
   const servers: StreamServer[] = [];
-  $("iframe[src], video[src], video source[src], a[href*='m3u8'], a[href*='mp4']").each((i, el) => {
-    const url = $(el).attr("src") || $(el).attr("href") || "";
-    if (!url) return;
-    servers.push({ name: $(el).text().trim() || `Server ${i + 1}`, url: resolveUrl(url, getDomain()) });
+  const seen = new Set<string>();
+  
+  // Extract from video elements
+  $("video source[src], video[src]").each((i, el) => {
+    const url = $(el).attr("src") || "";
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    servers.push({ name: "Direct", url: resolveUrl(url, getDomain()) });
   });
+  
+  // Extract from iframes (embed players)
+  $("iframe[src*='player'], iframe[src*='embed'], iframe[src*='video']").each((i, el) => {
+    const url = $(el).attr("src") || "";
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    servers.push({ name: $(el).attr("title") || `Server ${i + 1}`, url: resolveUrl(url, getDomain()) });
+  });
+  
+  // Extract from m3u8/mp4 links
+  $("a[href*='m3u8'], a[href*='mp4'], a[href*='embed']").each((i, el) => {
+    const url = $(el).attr("href") || "";
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    servers.push({ name: $(el).text().trim() || `Link ${i + 1}`, url: resolveUrl(url, getDomain()) });
+  });
+  
+  // Extract from data attributes
+  $("[data-src*='m3u8'], [data-src*='mp4'], [data-video], [data-url]").each((i, el) => {
+    const $el = $(el);
+    const url = $el.attr("data-src") || $el.attr("data-video") || $el.attr("data-url") || "";
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    servers.push({ name: $el.attr("data-name") || `Source ${i + 1}`, url: resolveUrl(url, getDomain()) });
+  });
+  
   return servers;
 }
 
