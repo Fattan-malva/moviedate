@@ -11,46 +11,52 @@ export default function MovieCard({ item, showType = false }: Props) {
   return (
     <Link
       href={`/movie/${item.slug}`}
-      className="group flex-shrink-0 w-[160px] md:w-[180px]"
+      className="group flex-shrink-0 w-[140px] md:w-[160px] flex flex-col"
     >
-      <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-white/[0.03] border border-white/[0.06] backdrop-blur-xl transition-all duration-500 group-hover:border-violet-500/40 group-hover:shadow-lg group-hover:shadow-violet-500/10 group-hover:-translate-y-1">
+      {/* Poster wrapper - fixed size 140x210 (mobile) / 160x240 (desktop) */}
+      <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-[#1a1a2e] border border-white/5 transition-all duration-300 group-hover:border-violet-500/50 group-hover:shadow-lg group-hover:shadow-violet-500/20 group-hover:-translate-y-1">
         {item.poster ? (
           <img
             src={item.poster}
             alt={item.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm p-4 text-center bg-gradient-to-br from-violet-900/20 to-pink-900/20">
-            {item.title}
+          <div className="w-full h-full flex items-center justify-center p-2 bg-gradient-to-br from-violet-900/30 to-pink-900/30">
+            <span className="text-gray-400 text-[10px] text-center line-clamp-3 leading-tight">
+              {item.title}
+            </span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Top-left type badge */}
         {showType && item.type && (
-          <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium rounded-full bg-violet-500/80 text-white backdrop-blur-md capitalize">
+          <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[9px] font-semibold rounded bg-violet-600/90 text-white backdrop-blur-sm capitalize tracking-wide">
             {item.type}
           </span>
         )}
+        {/* Top-right rating badge */}
         {item.imdbRating > 0 && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-yellow-500/80 text-[10px] font-bold text-black backdrop-blur-md">
-            <Star className="w-2.5 h-2.5 fill-current" />
+          <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 px-1 py-0.5 rounded bg-black/60 text-[9px] font-bold text-yellow-400 backdrop-blur-sm">
+            <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
             {item.imdbRating.toFixed(1)}
           </div>
         )}
-        {/* Glass overlay bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Hover overlay with glass effect */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
-      <div className="mt-2.5 px-0.5">
-        <h3 className="text-sm font-medium text-gray-200 truncate group-hover:text-violet-400 transition-colors">
+
+      {/* Info below poster */}
+      <div className="mt-2 px-0.5 flex flex-col gap-0.5">
+        <h3 className="text-xs md:text-[13px] font-medium text-gray-200 truncate group-hover:text-violet-400 transition-colors leading-tight">
           {item.title}
         </h3>
-        <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+        <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
           {item.year > 0 && <span>{item.year}</span>}
           {item.duration && (
             <>
-              <span className="text-gray-700">•</span>
-              <span>{item.duration}</span>
+              <span className="text-gray-600">•</span>
+              <span className="truncate max-w-[60px]">{item.duration}</span>
             </>
           )}
         </div>

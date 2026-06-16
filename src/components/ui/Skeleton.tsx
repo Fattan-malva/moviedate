@@ -8,10 +8,10 @@ export default function Skeleton({ className = "" }: { className?: string }) {
 
 export function MovieCardSkeleton() {
   return (
-    <div className="w-[160px] md:w-[180px] flex-shrink-0">
-      <Skeleton className="aspect-[2/3] w-full rounded-xl" />
-      <Skeleton className="h-4 w-3/4 mt-2.5 rounded-lg" />
-      <Skeleton className="h-3 w-1/2 mt-1 rounded-lg" />
+    <div className="w-[140px] md:w-[160px] flex-shrink-0 flex flex-col">
+      <Skeleton className="aspect-[2/3] w-full rounded-lg" />
+      <Skeleton className="h-3 w-3/4 mt-2 rounded" />
+      <Skeleton className="h-2 w-1/2 mt-1 rounded" />
     </div>
   );
 }
