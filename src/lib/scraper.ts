@@ -18,6 +18,7 @@ import {
   parseRating,
   parseYear,
   resolveImageUrl,
+  getProxiedImageUrl,
   resolveUrl,
 } from "./scraper-utils";
 
@@ -79,7 +80,7 @@ function itemFromCard($: cheerio.CheerioAPI, el: Element): ContentItem | null {
 
   const text = card.text().replace(/\s+/g, " ").trim();
   const genreText = card.find(".genre, .categories, .tag-list").first().text().trim();
-   const thumbnail = proxyImageUrl(imageFromElement($, card), getDomain());
+   const thumbnail = getProxiedImageUrl(resolveImageUrl(imageFromElement($, card), getDomain()));
 
   return {
     slug,
@@ -213,8 +214,8 @@ export async function getDetail(slug: string): Promise<DetailData> {
   return {
     slug,
     title,
-    thumbnail: resolveImageUrl(image, getDomain()),
-    poster: resolveImageUrl(image, getDomain()),
+    thumbnail: getProxiedImageUrl(resolveImageUrl(image, getDomain())),
+    poster: getProxiedImageUrl(resolveImageUrl(image, getDomain())),
     rating: parseRating(bodyText),
     year: parseYear(bodyText),
     synopsis: description,
@@ -294,3 +295,4 @@ function extractStreamServers($: cheerio.CheerioAPI): StreamServer[] {
 }
 
 export { buildUrl, getDomain };
+
