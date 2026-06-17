@@ -135,7 +135,6 @@ export default async function MovieDetailPage({ params }: Props) {
             contentType={movie.type}
             episodes={movie.episodes.map((ep) => ({
               slug: ep.slug || `${movie.slug}-s${ep.season || 1}e${ep.episode}`,
-              slug: ep.slug || `${movie.slug}-s${ep.season || 1}e${ep.episode}`,
               number: String(ep.episode),
               title: ep.title,
               season: ep.season || 1,
