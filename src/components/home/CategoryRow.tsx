@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { MovieItem } from "@/lib/types";
 import MovieCard from "../movie/MovieCard";
-import { MovieCardSkeleton } from "../ui/Skeleton";
 
 interface Props {
   title: string;
@@ -16,11 +15,6 @@ export default function CategoryRow({ title, items, showType = false }: Props) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setLoaded(true);
-  }, []);
 
   const scroll = (dir: "left" | "right") => {
     if (!rowRef.current) return;
@@ -38,21 +32,6 @@ export default function CategoryRow({ title, items, showType = false }: Props) {
   };
 
   const validItems = items.filter((item) => item && item.title && item.title.length > 1);
-
-  if (!loaded) {
-    return (
-      <section className="w-full">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="h-5 w-36 bg-white/5 rounded animate-pulse" />
-        </div>
-        <div className="flex gap-4 overflow-hidden">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <MovieCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
-    );
-  }
 
   if (!validItems.length) return null;
 
