@@ -19,10 +19,10 @@ export async function GET(request: NextRequest, { params }: Props) {
   if (subjectId) {
     // Use play API for actual video streams
     const streams = await getEpisodeStreams(subjectId, season, episode, slugStr);
+
     return NextResponse.json({
       videoUrl: streams.length > 0 ? streams[0].url : undefined,
       streamServers: streams,
-      episodes: [],
     });
   }
 

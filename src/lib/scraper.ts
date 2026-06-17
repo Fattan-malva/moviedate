@@ -880,16 +880,20 @@ export async function getPlayStreams(
   episode: number,
   detailPath: string
 ): Promise<StreamServer[]> {
+  // Strip episode suffix like -s1e1, -s2e3 etc. from detailPath
+  // The Play API expects the base movie/show slug, not the episode slug
+  const cleanDetailPath = detailPath.replace(/-s\d+e\d+$/, "");
+
   const params = new URLSearchParams({
     subjectId,
     se: String(season),
     ep: String(episode),
-    detailPath,
+    detailPath: cleanDetailPath,
     streamSignType: "1",
   });
 
   const url = `${PLAY_API_BASE}?${params.toString()}`;
-  const referer = `https://movibox.net/movies/${detailPath}?id=${subjectId}&type=/tv-series/detail&detailSe=${season}&detailEp=${episode}&lang=en`;
+  const referer = `https://movibox.net/movies/${cleanDetailPath}?id=${subjectId}&type=/tv-series/detail&detailSe=${season}&detailEp=${episode}&lang=en`;
 
   try {
     const res = await fetch(url, {

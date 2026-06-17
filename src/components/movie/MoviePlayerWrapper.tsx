@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import VideoPlayer from "./VideoPlayer";
 
 interface StreamServer {
@@ -51,16 +51,33 @@ export default function MoviePlayerWrapper({
   const [streamServers, setStreamServers] = useState(initialStreamServers);
   const [currentSlug, setCurrentSlug] = useState(slug);
   const [currentEpisodes, setCurrentEpisodes] = useState(episodes);
-  const [prevSlug, setPrevSlug] = useState<string | undefined>();
-  const [nextSlug, setNextSlug] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
+  // Key to force VideoPlayer remount when episode changes
+  const [playerKey, setPlayerKey] = useState(0);
+
+  // Use ref to avoid stale closure in loadEpisode
+  const episodesRef = useRef(currentEpisodes);
+  episodesRef.current = currentEpisodes;
+
+  // Compute initial prev/next from episodes list
+  const initialIdx = useMemo(() => {
+    return episodes.findIndex((ep) => ep.slug === slug);
+  }, [episodes, slug]);
+
+  const [prevSlug, setPrevSlug] = useState<string | undefined>(
+    initialIdx > 0 ? episodes[initialIdx - 1]?.slug : undefined
+  );
+  const [nextSlug, setNextSlug] = useState<string | undefined>(
+    initialIdx >= 0 && initialIdx < episodes.length - 1
+      ? episodes[initialIdx + 1]?.slug
+      : undefined
+  );
 
   const loadEpisode = useCallback(async (episodeSlug: string, season?: number, episode?: number) => {
     setLoading(true);
     try {
       let url: string;
       if (subjectId && season !== undefined && episode !== undefined) {
-        // Use play API for actual video streams
         url = `/api/scraper/episode/${episodeSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}`;
       } else {
         url = `/api/scraper/episode/${episodeSlug}`;
@@ -70,11 +87,24 @@ export default function MoviePlayerWrapper({
       if (!res.ok) throw new Error("Failed to fetch episode");
       const data: EpisodeDetail = await res.json();
 
-      setVideoUrl(data.videoUrl || data.streamServers?.[0]?.url || "");
+      const newUrl = data.videoUrl || data.streamServers?.[0]?.url || "";
+      setVideoUrl(newUrl);
       setStreamServers(data.streamServers || []);
       setCurrentSlug(episodeSlug);
-      setPrevSlug(data.prev);
-      setNextSlug(data.next);
+      // Force remount so iframe/video re-renders with new URL
+      setPlayerKey((k) => k + 1);
+
+      // Compute prev/next from the LATEST episode list via ref
+      const eps = episodesRef.current;
+      const currentIdx = eps.findIndex(
+        (ep) => ep.slug === episodeSlug || (ep.season === season && parseInt(ep.number) === episode)
+      );
+      setPrevSlug(currentIdx > 0 ? eps[currentIdx - 1]?.slug : undefined);
+      setNextSlug(
+        currentIdx >= 0 && currentIdx < eps.length - 1
+          ? eps[currentIdx + 1]?.slug
+          : undefined
+      );
 
       // Update episodes list if the response includes them
       if (data.episodes && data.episodes.length > 0) {
@@ -98,6 +128,7 @@ export default function MoviePlayerWrapper({
         </div>
       )}
       <VideoPlayer
+        key={playerKey}
         videoUrl={videoUrl}
         streamServers={streamServers}
         title={title}
