@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEpisodeDetail, getEpisodeStreams } from "@/lib/scraper";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 interface Props {
   params: Promise<{ slug: string[] }>;
@@ -21,15 +22,42 @@ export async function GET(request: NextRequest, { params }: Props) {
 
   if (subjectId) {
     // Use play API for actual video streams
-    const streams = await getEpisodeStreams(subjectId, season, episode, slugStr);
+    try {
+      const streams = await getEpisodeStreams(subjectId, season, episode, slugStr);
 
-    return NextResponse.json({
-      videoUrl: streams.length > 0 ? streams[0].url : undefined,
-      streamServers: streams,
-    });
+      if (!streams || streams.length === 0) {
+        return NextResponse.json({
+          videoUrl: undefined,
+          streamServers: [],
+          error: "No streams available",
+        });
+      }
+
+      return NextResponse.json({
+        videoUrl: streams[0].url,
+        streamServers: streams,
+      });
+    } catch (err: any) {
+      console.error(`Episode API error for ${slugStr}:`, err?.message || err);
+      return NextResponse.json({
+        videoUrl: undefined,
+        streamServers: [],
+        error: err?.message || "Failed to load streams",
+      }, { status: 500 });
+    }
   }
 
   // Fallback to HTML scraping
-  const data = await getEpisodeDetail(slugStr);
-  return NextResponse.json(data);
+  try {
+    const data = await getEpisodeDetail(slugStr);
+    return NextResponse.json(data);
+  } catch (err: any) {
+    console.error(`Episode detail error for ${slugStr}:`, err?.message || err);
+    return NextResponse.json({
+      videoUrl: undefined,
+      streamServers: [],
+      episodes: [],
+      error: err?.message || "Failed to load episode",
+    }, { status: 500 });
+  }
 }

@@ -59,6 +59,7 @@ export default function MoviePlayerWrapper({
   const [currentSlug, setCurrentSlug] = useState(initialEpisodeSlug);
   const [currentEpisodes, setCurrentEpisodes] = useState(episodes);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   // Key to force VideoPlayer remount when episode changes
   const [playerKey, setPlayerKey] = useState(0);
 
@@ -82,6 +83,7 @@ export default function MoviePlayerWrapper({
 
   const loadEpisode = useCallback(async (episodeSlug: string, season?: number, episode?: number) => {
     setLoading(true);
+    setLoadError(null);
     try {
       let url: string;
       if (subjectId && season !== undefined && episode !== undefined) {
@@ -91,10 +93,14 @@ export default function MoviePlayerWrapper({
       }
 
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch episode");
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data: EpisodeDetail = await res.json();
 
       const newUrl = data.videoUrl || data.streamServers?.[0]?.url || "";
+      if (!newUrl) {
+        setLoadError("No video stream available for this episode.");
+        return;
+      }
       setVideoUrl(newUrl);
       setStreamServers(data.streamServers || []);
       setCurrentSlug(episodeSlug);
@@ -117,8 +123,9 @@ export default function MoviePlayerWrapper({
       if (data.episodes && data.episodes.length > 0) {
         setCurrentEpisodes(data.episodes);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load episode:", err);
+      setLoadError(err?.message || "Failed to load episode. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -132,6 +139,17 @@ export default function MoviePlayerWrapper({
             <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
             Loading episode...
           </div>
+        </div>
+      )}
+      {loadError && !loading && (
+        <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between">
+          <span>{loadError}</span>
+          <button
+            onClick={() => { setLoadError(null); loadEpisode(currentSlug); }}
+            className="px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 rounded-full transition-colors"
+          >
+            Retry
+          </button>
         </div>
       )}
       <VideoPlayer

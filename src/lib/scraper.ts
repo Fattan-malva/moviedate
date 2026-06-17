@@ -938,31 +938,25 @@ const PLAY_API_HEADERS: Record<string, string> = {
 /**
  * Fetch actual video streams from movibox's play API.
  * Uses native fetch for Vercel compatibility.
+ * Includes timeout (6s) and retry (1 attempt) for Vercel serverless reliability.
  */
-export async function getPlayStreams(
+const PLAY_API_TIMEOUT_MS = 6000;
+const PLAY_API_MAX_RETRIES = 1;
+
+async function fetchPlayApiOnce(
+  url: string,
+  referer: string,
   subjectId: string,
   season: number,
-  episode: number,
-  detailPath: string
+  episode: number
 ): Promise<StreamServer[]> {
-  // Strip episode suffix like -s1e1, -s2e3 etc. from detailPath
-  // The Play API expects the base movie/show slug, not the episode slug
-  const cleanDetailPath = detailPath.replace(/-s\d+e\d+$/, "");
-
-  const params = new URLSearchParams({
-    subjectId,
-    se: String(season),
-    ep: String(episode),
-    detailPath: cleanDetailPath,
-    streamSignType: "1",
-  });
-
-  const url = `${PLAY_API_BASE}?${params.toString()}`;
-  const referer = `https://movibox.net/movies/${cleanDetailPath}?id=${subjectId}&type=/tv-series/detail&detailSe=${season}&detailEp=${episode}&lang=en`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PLAY_API_TIMEOUT_MS);
 
   try {
     const res = await fetch(url, {
       headers: { ...PLAY_API_HEADERS, Referer: referer },
+      signal: controller.signal,
     });
 
     if (!res.ok) {
@@ -986,10 +980,52 @@ export async function getPlayStreams(
       duration: s.duration,
       codecName: s.codecName,
     }));
-  } catch (e) {
-    console.error("Play API fetch error:", e);
+  } catch (e: any) {
+    if (e?.name === "AbortError") {
+      console.error(`Play API timeout after ${PLAY_API_TIMEOUT_MS}ms for subjectId=${subjectId} se=${season} ep=${episode}`);
+    } else {
+      console.error("Play API fetch error:", e);
+    }
     return [];
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+export async function getPlayStreams(
+  subjectId: string,
+  season: number,
+  episode: number,
+  detailPath: string
+): Promise<StreamServer[]> {
+  // Strip episode suffix like -s1e1, -s2e3 etc. from detailPath
+  // The Play API expects the base movie/show slug, not the episode slug
+  const cleanDetailPath = detailPath.replace(/-s\d+e\d+$/, "");
+
+  const params = new URLSearchParams({
+    subjectId,
+    se: String(season),
+    ep: String(episode),
+    detailPath: cleanDetailPath,
+    streamSignType: "1",
+  });
+
+  const url = `${PLAY_API_BASE}?${params.toString()}`;
+  const referer = `https://movibox.net/movies/${cleanDetailPath}?id=${subjectId}&type=/tv-series/detail&detailSe=${season}&detailEp=${episode}&lang=en`;
+
+  // Try with retry logic
+  for (let attempt = 0; attempt <= PLAY_API_MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, 1000));
+      console.log(`Play API retry attempt ${attempt} for subjectId=${subjectId} se=${season} ep=${episode}`);
+    }
+
+    const result = await fetchPlayApiOnce(url, referer, subjectId, season, episode);
+    if (result.length > 0) return result;
+  }
+
+  console.error(`Play API: all attempts failed for subjectId=${subjectId} se=${season} ep=${episode}`);
+  return [];
 }
 
 /**
@@ -1030,17 +1066,7 @@ export async function getDetail(slug: string): Promise<DetailData> {
     if (homeSubject) {
       console.log(`Found "${homeSubject.title}" from homepage with subjectId=${homeSubject.subjectId}`);
       
-      const isTvSeries = homeSubject.type === "tv-series";
-      const initSe = isTvSeries ? 1 : 0;
-      const initEp = isTvSeries ? 1 : 0;
-      
-      let streamServers: StreamServer[] = [];
-      try {
-        streamServers = await getPlayStreams(homeSubject.subjectId, initSe, initEp, slug);
-      } catch (e) {
-        console.error("Play API failed for homepage fallback:", e);
-      }
-      
+      // NOTE: Skip Play API here too — client fetches streams via episode API
       return {
         slug,
         title: homeSubject.title,
@@ -1055,7 +1081,7 @@ export async function getDetail(slug: string): Promise<DetailData> {
         country: homeSubject.country,
         cast: homeSubject.cast,
         episodes: undefined,
-        streamServers: streamServers.length > 0 ? streamServers : [],
+        streamServers: [],
         relatedContent: [],
         subjectId: homeSubject.subjectId,
       };
@@ -1089,22 +1115,10 @@ export async function getDetail(slug: string): Promise<DetailData> {
     }
     nuxtDetail.relatedContent = extractItems($);
 
-    // Fetch actual video streams via play API if we have subjectId
-    if (nuxtDetail.subjectId) {
-      // For TV series, start with season 1 episode 1; for movies use 0,0
-      const isTvSeries = nuxtDetail.type === "tv-series";
-      const initSe = isTvSeries ? 1 : 0;
-      const initEp = isTvSeries ? 1 : 0;
-
-      try {
-        const playData = await getPlayStreams(nuxtDetail.subjectId, initSe, initEp, nuxtDetail.slug || slug);
-        if (playData.length > 0) {
-          nuxtDetail.streamServers = playData;
-        }
-      } catch (e) {
-        console.error("Play API failed, using fallback:", e);
-      }
-    }
+    // NOTE: We intentionally do NOT call getPlayStreams() here.
+    // The Play API can be slow (6s+) and would block the detail page load on Vercel.
+    // Instead, the client fetches streams via /api/scraper/episode/ when the player loads.
+    // This makes the detail page load fast (~2s) and streams load separately.
 
     return nuxtDetail;
   }
