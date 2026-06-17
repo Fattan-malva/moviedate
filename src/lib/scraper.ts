@@ -858,16 +858,21 @@ export async function search(query: string, page = 1): Promise<ListResponse<Cont
 // ─── Play API Integration ────────────────────────────────────────────────────
 // movibox.net serves actual video streams via their internal play API.
 // The trailer URL from Nuxt payload is NOT the real video.
+// We use native fetch instead of httpClient (axios) because the play API
+// requires a full URL and axios baseURL can mangle it on Vercel.
 
 const PLAY_API_BASE = "https://movibox.net/wefeed-h5api-bff/subject/play";
+const PLAY_API_HEADERS: Record<string, string> = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+  "Accept": "application/json, text/plain, */*",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Origin": "https://movibox.net",
+  "Referer": "https://movibox.net/",
+};
 
 /**
  * Fetch actual video streams from movibox's play API.
- * @param subjectId - The subject ID from Nuxt payload (e.g. "6245590300333851720")
- * @param season - Season number (0 for movies, 1+ for TV series)
- * @param episode - Episode number (0 for movies, 1+ for TV series)
- * @param detailPath - The detail slug/path
- * @returns Array of StreamServer with quality labels
+ * Uses native fetch for Vercel compatibility.
  */
 export async function getPlayStreams(
   subjectId: string,
@@ -887,15 +892,21 @@ export async function getPlayStreams(
   const referer = `https://movibox.net/movies/${detailPath}?id=${subjectId}&type=/tv-series/detail&detailSe=${season}&detailEp=${episode}&lang=en`;
 
   try {
-    const { data } = await httpClient.get<any>(url, {
-      headers: {
-        Referer: referer,
-        Origin: "https://movibox.net",
-      },
+    const res = await fetch(url, {
+      headers: { ...PLAY_API_HEADERS, Referer: referer },
     });
 
-    const streams = data?.data?.streams;
-    if (!Array.isArray(streams) || streams.length === 0) return [];
+    if (!res.ok) {
+      console.error(`Play API HTTP ${res.status} for subjectId=${subjectId} se=${season} ep=${episode}`);
+      return [];
+    }
+
+    const json = await res.json();
+    const streams = json?.data?.streams;
+    if (!Array.isArray(streams) || streams.length === 0) {
+      console.error("Play API: no streams returned", { subjectId, season, episode, hasResource: json?.data?.hasResource });
+      return [];
+    }
 
     return streams.map((s: any) => ({
       name: `${s.resolutions}p`,
@@ -907,7 +918,7 @@ export async function getPlayStreams(
       codecName: s.codecName,
     }));
   } catch (e) {
-    console.error("Play API error:", e);
+    console.error("Play API fetch error:", e);
     return [];
   }
 }
@@ -947,8 +958,13 @@ export async function getDetail(slug: string): Promise<DetailData> {
 
     // Fetch actual video streams via play API if we have subjectId
     if (nuxtDetail.subjectId) {
+      // For TV series, start with season 1 episode 1; for movies use 0,0
+      const isTvSeries = nuxtDetail.type === "tv-series";
+      const initSe = isTvSeries ? 1 : 0;
+      const initEp = isTvSeries ? 1 : 0;
+
       try {
-        const playData = await getPlayStreams(nuxtDetail.subjectId, 0, 0, nuxtDetail.slug || slug);
+        const playData = await getPlayStreams(nuxtDetail.subjectId, initSe, initEp, nuxtDetail.slug || slug);
         if (playData.length > 0) {
           nuxtDetail.streamServers = playData;
         }

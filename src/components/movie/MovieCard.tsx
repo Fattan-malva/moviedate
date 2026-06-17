@@ -1,6 +1,7 @@
 import { Star } from "lucide-react";
 import type { MovieItem } from "@/lib/types";
 import Link from "next/link";
+import ImageWithSkeleton from "../ui/ImageWithSkeleton";
 
 interface Props {
   item: MovieItem;
@@ -22,15 +23,15 @@ export default function MovieCard({ item, showType = false }: Props) {
     <Link
       href={`/movie/${slug}`}
       className="group flex-shrink-0 w-[140px] md:w-[160px] flex flex-col"
+      style={{ contain: "layout style" }}
     >
       {/* Poster wrapper - fixed size 140x210 (mobile) / 160x240 (desktop) */}
       <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-[#1a1a2e] border border-white/5 transition-all duration-300 group-hover:border-violet-500/50 group-hover:shadow-lg group-hover:shadow-violet-500/20 group-hover:-translate-y-1">
         {item.poster ? (
-          <img
+          <ImageWithSkeleton
             src={poster}
             alt={title}
-            className="w-full h-full object-cover"
-            loading="lazy"
+            skeletonClassName="rounded-lg"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center p-2 bg-gradient-to-br from-violet-900/30 to-pink-900/30">

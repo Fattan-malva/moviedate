@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { MovieItem } from "@/lib/types";
 import Link from "next/link";
+import ImageWithSkeleton from "../ui/ImageWithSkeleton";
 
 interface Props {
   items: MovieItem[];
@@ -49,7 +50,7 @@ export default function HeroSlider({ items }: Props) {
   if (!item) return null;
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative" style={{ contain: "layout style" }}>
       {/* Hero section */}
       <div className="relative w-full h-[280px] md:h-[420px] overflow-hidden bg-[#0a0000]">
         {validItems.map((m, i) => (
@@ -61,11 +62,10 @@ export default function HeroSlider({ items }: Props) {
           >
             {/* Backdrop image */}
             {m.poster && (
-              <img
+              <ImageWithSkeleton
                 src={m.poster}
                 alt={m.title}
-                className="w-full h-full object-cover"
-                loading={i === 0 ? "eager" : "lazy"}
+                className="w-full h-full"
               />
             )}
             {/* Gradient overlay */}

@@ -57,7 +57,7 @@ export default function CategoryRow({ title, items, showType = false }: Props) {
   if (!validItems.length) return null;
 
   return (
-    <section className="w-full">
+    <section className="w-full" style={{ contain: "layout style" }}>
       {/* Section title */}
       <div className="flex items-center gap-2 mb-3">
         <h2 className="text-sm md:text-base font-semibold text-white">{title}</h2>
@@ -84,6 +84,7 @@ export default function CategoryRow({ title, items, showType = false }: Props) {
           ref={rowRef}
           onScroll={updateArrows}
           className="flex gap-4 overflow-x-auto scroll-smooth pb-2 hide-scrollbar"
+          style={{ willChange: "scroll-position" }}
         >
           {/* Left padding for first card */}
           <div className="w-1 flex-shrink-0" />

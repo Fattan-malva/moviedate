@@ -21,3 +21,16 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Performance optimizations for smooth scrolling */
+.hide-scrollbar {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+  contain: layout style;
+}
+
+/* Optimize image rendering */
+img {
+  content-visibility: auto;
+  contain-intrinsic-size: 160px 240px;
+}
