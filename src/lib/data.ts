@@ -31,15 +31,15 @@ export async function getHomepage(): Promise<HomepageData> {
 }
 
 export async function getMovieBySlug(slug: string): Promise<MovieItem | null> {
-  const all = await getAllMovies();
-  const cached = all.find((m) => m.slug === slug);
-  if (cached) return cached;
-
+  // Always fetch fresh detail data to get streamServers and episodes
   try {
     const detail = await getDetail(slug);
     return toMovieItem(detail);
   } catch {
-    return null;
+    // Fallback to cached data
+    const all = await getAllMovies();
+    const cached = all.find((m) => m.slug === slug);
+    return cached || null;
   }
 }
 
