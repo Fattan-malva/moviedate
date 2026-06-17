@@ -272,6 +272,67 @@ async function fetchPageWithHtml(path: string): Promise<{ $: cheerio.CheerioAPI;
   return { $: cheerio.load(data), html: data };
 }
 
+/** Check if HTML is a download-app redirect page */
+function isDownloadAppRedirect(html: string): boolean {
+  // Check for meta refresh redirect to download-app
+  if (html.includes('/download-app') && html.includes('meta http-equiv="refresh"')) return true;
+  // Check for download-app page title (axios follows meta refresh)
+  if (html.includes('<title>MoviBox App Download')) return true;
+  // Check for download-app page content
+  if (html.includes('Download MoviBox app') && html.includes('install easily')) return true;
+  return false;
+}
+
+/** Find a subject by slug from the homepage Nuxt 3 payload */
+function findSubjectFromHomepage(slug: string): { subjectId: string; type: string; title: string; thumbnail: string; genres?: string[]; year?: string; synopsis?: string; duration?: string; country?: string; cast?: { name: string; role?: string; image?: string }[] } | null {
+  const homeHtml = (globalThis as any).__MOVIBOX_HOME_HTML__;
+  if (!homeHtml) return null;
+
+  const arr = parseNuxtPayload(homeHtml);
+  if (!arr) return null;
+
+  for (let i = 0; i < arr.length; i++) {
+    const val = arr[i];
+    if (!val || typeof val !== "object" || Array.isArray(val)) continue;
+    if (!("subjectId" in val) || !("title" in val) || !("detailPath" in val)) continue;
+
+    const subject = resolveNuxtRef(arr, i);
+    if (!subject || !subject.detailPath) continue;
+
+    if (subject.detailPath === slug) {
+      const cover = subject.cover || subject.image || subject.poster;
+      const thumbnail = (cover && typeof cover === "object") ? (cover.url || "") : (typeof cover === "string" ? cover : "");
+
+      const genreStr = subject.genre || "";
+      const genres = typeof genreStr === "string" && genreStr.length > 0
+        ? genreStr.split(",").map((g: string) => g.trim()).filter(Boolean)
+        : undefined;
+
+      const cast = Array.isArray(subject.staffList)
+        ? subject.staffList.map((s: any) => ({
+            name: s.name || s.actorName || "",
+            role: s.role || s.characterName || "",
+            image: s.image?.url || s.avatar?.url || undefined,
+          })).filter((c: any) => c.name)
+        : undefined;
+
+      return {
+        subjectId: String(subject.subjectId),
+        type: subject.subjectType === 2 ? "movie" : subject.subjectType === 1 ? "tv-series" : "movie",
+        title: subject.title,
+        thumbnail,
+        genres,
+        year: parseYear(subject.releaseDate || "") ? String(parseYear(subject.releaseDate || "")) : undefined,
+        synopsis: subject.description || undefined,
+        duration: subject.duration ? String(subject.duration) : undefined,
+        country: subject.countryName || undefined,
+        cast,
+      };
+    }
+  }
+  return null;
+}
+
 // Server-only: Puppeteer is not available in Vercel serverless
 // Use HTTP-based fetching with Nuxt 3 __NUXT_DATA__ payload extraction
 async function fetchPageDynamic(path: string): Promise<cheerio.CheerioAPI> {
@@ -786,6 +847,10 @@ export async function getHome(): Promise<HomeData> {
 
   // Primary: Use Nuxt 3 payload hero items (has images)
   const rawHtml = (globalThis as any).__MOVIBOX_RAW_HTML__ || $.html();
+  
+  // Cache homepage HTML for detail page fallback (when /detail/ redirects to /download-app)
+  (globalThis as any).__MOVIBOX_HOME_HTML__ = rawHtml;
+  
   const nuxtResult = extractSectionsFromNuxtPayload(rawHtml);
   const heroItems = nuxtResult.hero.length > 0 ? nuxtResult.hero : [];
 
@@ -945,6 +1010,70 @@ export async function getDetail(slug: string): Promise<DetailData> {
   
   // Primary: Use Nuxt 3 payload (has images)
   const rawHtml = (globalThis as any).__MOVIBOX_RAW_HTML__ || $.html();
+  
+  // Check if the page redirected to download-app
+  if (isDownloadAppRedirect(rawHtml)) {
+    console.log(`Detail page for "${slug}" redirected to download-app, trying homepage fallback`);
+    
+    // Cache homepage HTML if not already cached
+    if (!(globalThis as any).__MOVIBOX_HOME_HTML__) {
+      try {
+        const homeResult = await fetchPageWithHtml("/");
+        (globalThis as any).__MOVIBOX_HOME_HTML__ = homeResult.html;
+      } catch (e) {
+        console.error("Failed to fetch homepage for fallback:", e);
+      }
+    }
+    
+    // Try to find the subject from homepage data
+    const homeSubject = findSubjectFromHomepage(slug);
+    if (homeSubject) {
+      console.log(`Found "${homeSubject.title}" from homepage with subjectId=${homeSubject.subjectId}`);
+      
+      const isTvSeries = homeSubject.type === "tv-series";
+      const initSe = isTvSeries ? 1 : 0;
+      const initEp = isTvSeries ? 1 : 0;
+      
+      let streamServers: StreamServer[] = [];
+      try {
+        streamServers = await getPlayStreams(homeSubject.subjectId, initSe, initEp, slug);
+      } catch (e) {
+        console.error("Play API failed for homepage fallback:", e);
+      }
+      
+      return {
+        slug,
+        title: homeSubject.title,
+        thumbnail: getProxiedImageUrl(homeSubject.thumbnail),
+        poster: getProxiedImageUrl(homeSubject.thumbnail),
+        type: homeSubject.type as any,
+        rating: undefined,
+        year: homeSubject.year,
+        synopsis: homeSubject.synopsis,
+        genres: homeSubject.genres,
+        duration: homeSubject.duration,
+        country: homeSubject.country,
+        cast: homeSubject.cast,
+        episodes: undefined,
+        streamServers: streamServers.length > 0 ? streamServers : [],
+        relatedContent: [],
+        subjectId: homeSubject.subjectId,
+      };
+    }
+    
+    // If homepage fallback also fails, return minimal data
+    return {
+      slug,
+      title: slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      thumbnail: "",
+      poster: "",
+      type: "movie",
+      episodes: undefined,
+      streamServers: [],
+      relatedContent: [],
+    };
+  }
+  
   const nuxtDetail = extractDetailFromNuxtPayload(rawHtml, slug);
   if (nuxtDetail) {
     // Extract episodes and stream servers from HTML as fallback

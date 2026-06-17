@@ -13,8 +13,11 @@ export async function GET(request: NextRequest, { params }: Props) {
 
   // Check for play API params
   const subjectId = request.nextUrl.searchParams.get("subjectId");
-  const season = parseInt(request.nextUrl.searchParams.get("se") || "0");
-  const episode = parseInt(request.nextUrl.searchParams.get("ep") || "0");
+  const contentType = request.nextUrl.searchParams.get("type") || "tv-series";
+  const isMovie = contentType === "movie";
+  // For movies, always use se=0, ep=0; for TV series use actual values
+  const season = isMovie ? 0 : parseInt(request.nextUrl.searchParams.get("se") || "1");
+  const episode = isMovie ? 0 : parseInt(request.nextUrl.searchParams.get("ep") || "1");
 
   if (subjectId) {
     // Use play API for actual video streams

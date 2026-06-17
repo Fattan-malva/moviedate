@@ -37,6 +37,8 @@ interface MoviePlayerWrapperProps {
   title: string;
   /** Subject ID for play API */
   subjectId?: string;
+  /** Content type: movie or tv-series */
+  contentType?: string;
 }
 
 export default function MoviePlayerWrapper({
@@ -46,10 +48,15 @@ export default function MoviePlayerWrapper({
   slug,
   title,
   subjectId,
+  contentType = "tv-series",
 }: MoviePlayerWrapperProps) {
+  // If episodes exist, default currentSlug to the first episode's slug
+  // so the episode button is highlighted on load
+  const initialEpisodeSlug = episodes.length > 0 ? episodes[0].slug : slug;
+
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl);
   const [streamServers, setStreamServers] = useState(initialStreamServers);
-  const [currentSlug, setCurrentSlug] = useState(slug);
+  const [currentSlug, setCurrentSlug] = useState(initialEpisodeSlug);
   const [currentEpisodes, setCurrentEpisodes] = useState(episodes);
   const [loading, setLoading] = useState(false);
   // Key to force VideoPlayer remount when episode changes
@@ -61,8 +68,8 @@ export default function MoviePlayerWrapper({
 
   // Compute initial prev/next from episodes list
   const initialIdx = useMemo(() => {
-    return episodes.findIndex((ep) => ep.slug === slug);
-  }, [episodes, slug]);
+    return episodes.findIndex((ep) => ep.slug === initialEpisodeSlug);
+  }, [episodes, initialEpisodeSlug]);
 
   const [prevSlug, setPrevSlug] = useState<string | undefined>(
     initialIdx > 0 ? episodes[initialIdx - 1]?.slug : undefined
@@ -78,9 +85,9 @@ export default function MoviePlayerWrapper({
     try {
       let url: string;
       if (subjectId && season !== undefined && episode !== undefined) {
-        url = `/api/scraper/episode/${episodeSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}`;
+        url = `/api/scraper/episode/${episodeSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}&type=${contentType}`;
       } else {
-        url = `/api/scraper/episode/${episodeSlug}`;
+        url = `/api/scraper/episode/${episodeSlug}?type=${contentType}`;
       }
 
       const res = await fetch(url);
@@ -115,7 +122,7 @@ export default function MoviePlayerWrapper({
     } finally {
       setLoading(false);
     }
-  }, [subjectId]);
+  }, [subjectId, contentType]);
 
   return (
     <div className="relative">
