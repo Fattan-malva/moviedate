@@ -108,13 +108,19 @@ export function getProxiedImageUrl(absoluteImageUrl: string): string {
 export function getProxiedVideoUrl(videoUrl: string): string {
   if (!videoUrl) return "";
 
-  // Proxy video URLs through our API to avoid CORS/hotlinking
-  // Covers: macdn, aoneroom, pbcdn (trailer), bcdnxw/bcdnw (actual video streams)
+  // For hakunaymatata CDN (actual video streams), pass URL directly.
+  // The browser sends proper headers from the user's real IP, avoiding
+  // 403 blocks that affect Vercel serverless IPs.
+  // The CDN uses signed URLs (sign + t params) which are already authenticated.
+  if (videoUrl.includes("hakunaymatata.com")) {
+    return videoUrl;
+  }
+
+  // Proxy other CDN URLs through our API to avoid CORS/hotlinking
   if (
     videoUrl.includes("macdn") ||
     videoUrl.includes("aoneroom") ||
-    videoUrl.includes("pbcdn") ||
-    videoUrl.includes("hakunaymatata.com")
+    videoUrl.includes("pbcdn")
   ) {
     return `/api/proxy-video?url=${encodeURIComponent(videoUrl)}`;
   }
