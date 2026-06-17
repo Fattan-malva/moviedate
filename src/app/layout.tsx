@@ -6,6 +6,9 @@ import Footer from "@/components/layout/Footer";
 export const metadata: Metadata = {
   title: "MovieDate - Watch Movies & TV Shows",
   description: "Discover movies, TV series, anime and more. Search, bookmark, and track your watching history.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
