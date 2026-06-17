@@ -6,12 +6,14 @@ import VideoPlayer from "./VideoPlayer";
 interface StreamServer {
   name: string;
   url: string;
+  resolution?: string;
 }
 
 interface Episode {
   slug: string;
   number: string;
   title?: string;
+  season?: number;
 }
 
 interface EpisodeDetail {
@@ -33,6 +35,8 @@ interface MoviePlayerWrapperProps {
   slug: string;
   /** Movie title */
   title: string;
+  /** Subject ID for play API */
+  subjectId?: string;
 }
 
 export default function MoviePlayerWrapper({
@@ -41,6 +45,7 @@ export default function MoviePlayerWrapper({
   episodes = [],
   slug,
   title,
+  subjectId,
 }: MoviePlayerWrapperProps) {
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl);
   const [streamServers, setStreamServers] = useState(initialStreamServers);
@@ -50,10 +55,18 @@ export default function MoviePlayerWrapper({
   const [nextSlug, setNextSlug] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
 
-  const loadEpisode = useCallback(async (episodeSlug: string) => {
+  const loadEpisode = useCallback(async (episodeSlug: string, season?: number, episode?: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/scraper/episode/${episodeSlug}`);
+      let url: string;
+      if (subjectId && season !== undefined && episode !== undefined) {
+        // Use play API for actual video streams
+        url = `/api/scraper/episode/${episodeSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}`;
+      } else {
+        url = `/api/scraper/episode/${episodeSlug}`;
+      }
+
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch episode");
       const data: EpisodeDetail = await res.json();
 
@@ -72,7 +85,7 @@ export default function MoviePlayerWrapper({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [subjectId]);
 
   return (
     <div className="relative">

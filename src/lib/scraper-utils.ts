@@ -105,6 +105,24 @@ export function getProxiedImageUrl(absoluteImageUrl: string): string {
   return absoluteImageUrl;
 }
 
+export function getProxiedVideoUrl(videoUrl: string): string {
+  if (!videoUrl) return "";
+
+  // Proxy video URLs through our API to avoid CORS/hotlinking
+  // Covers: macdn, aoneroom, pbcdn (trailer), bcdnxw/bcdnw (actual video streams)
+  if (
+    videoUrl.includes("macdn") ||
+    videoUrl.includes("aoneroom") ||
+    videoUrl.includes("pbcdn") ||
+    videoUrl.includes("hakunaymatata.com")
+  ) {
+    return `/api/proxy-video?url=${encodeURIComponent(videoUrl)}`;
+  }
+
+  // Return other URLs directly (e.g. external embed URLs)
+  return videoUrl;
+}
+
 export function getTextBetweenMarkers(
   text: string,
   startMarker: string,

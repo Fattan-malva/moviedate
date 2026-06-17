@@ -27,6 +27,11 @@ export interface Review {
 export interface StreamServer {
   name: string;
   url: string;
+  resolution?: string;
+  format?: string;
+  size?: number;
+  duration?: number;
+  codecName?: string;
 }
 
 export interface MovieItem {
@@ -48,6 +53,7 @@ export interface MovieItem {
   reviews: Review[];
   url: string;
   streamServers?: StreamServer[];
+  subjectId?: string;
 }
 
 export interface CategorySection {

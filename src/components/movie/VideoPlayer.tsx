@@ -6,12 +6,14 @@ import { Play, Loader2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-re
 interface StreamServer {
   name: string;
   url: string;
+  resolution?: string;
 }
 
 interface Episode {
   slug: string;
   number: string;
   title?: string;
+  season?: number;
 }
 
 interface VideoPlayerProps {
@@ -26,7 +28,7 @@ interface VideoPlayerProps {
   /** Current episode slug */
   currentEpisodeSlug?: string;
   /** Callback when episode is selected */
-  onEpisodeSelect?: (slug: string) => void;
+  onEpisodeSelect?: (slug: string, season?: number, episode?: number) => void;
   /** Previous episode slug */
   prevSlug?: string;
   /** Next episode slug */
@@ -62,7 +64,8 @@ function isDirectVideo(url: string): boolean {
     url.includes(".mp4?") ||
     url.includes(".m3u8?") ||
     url.includes("video/") ||
-    url.includes("cdn")
+    url.includes("cdn") ||
+    url.includes("/api/proxy-video")
   );
 }
 
@@ -199,7 +202,10 @@ export default function VideoPlayer({
             <div className="flex gap-2">
               {prevSlug && (
                 <button
-                  onClick={() => onEpisodeSelect?.(prevSlug)}
+                  onClick={() => {
+                    const prevEp = episodes.find(e => e.slug === prevSlug);
+                    onEpisodeSelect?.(prevSlug, prevEp?.season, prevEp ? parseInt(prevEp.number) : undefined);
+                  }}
                   className="flex items-center gap-1 px-3 py-1.5 text-xs bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white rounded-full border border-white/[0.08] transition-all"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
@@ -208,7 +214,10 @@ export default function VideoPlayer({
               )}
               {nextSlug && (
                 <button
-                  onClick={() => onEpisodeSelect?.(nextSlug)}
+                  onClick={() => {
+                    const nextEp = episodes.find(e => e.slug === nextSlug);
+                    onEpisodeSelect?.(nextSlug, nextEp?.season, nextEp ? parseInt(nextEp.number) : undefined);
+                  }}
                   className="flex items-center gap-1 px-3 py-1.5 text-xs bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white rounded-full border border-white/[0.08] transition-all"
                 >
                   Next
@@ -225,7 +234,7 @@ export default function VideoPlayer({
                 return (
                   <button
                     key={ep.slug}
-                    onClick={() => onEpisodeSelect?.(ep.slug)}
+                    onClick={() => onEpisodeSelect?.(ep.slug, ep.season, parseInt(ep.number))}
                     className={`relative aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-all ${
                       isActive
                         ? "bg-violet-600 text-white shadow-lg shadow-violet-500/30 border border-violet-400/50"

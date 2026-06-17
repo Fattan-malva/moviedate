@@ -109,9 +109,7 @@ export default async function MovieDetailPage({ params }: Props) {
             <div className="flex items-center gap-3 mb-6">
               <BookmarkButton slug={movie.slug} title={movie.title} />
               <a
-                href={movie.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#player"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-full text-sm font-medium transition-all hover:shadow-lg hover:shadow-violet-500/25"
               >
                 Watch Now
@@ -128,15 +126,17 @@ export default async function MovieDetailPage({ params }: Props) {
         </div>
 
         {/* Embedded Video Player */}
-        <section className="mt-8">
+        <section id="player" className="mt-8 scroll-mt-20">
           <MoviePlayerWrapper
             slug={movie.slug}
             title={movie.title}
             initialStreamServers={movie.streamServers}
+            subjectId={movie.subjectId}
             episodes={movie.episodes.map((ep) => ({
-              slug: ep.slug || `${movie.slug}-episode-${ep.episode}`,
+              slug: ep.slug || `${movie.slug}-s${ep.season || 1}e${ep.episode}`,
               number: String(ep.episode),
               title: ep.title,
+              season: ep.season || 1,
             }))}
           />
         </section>

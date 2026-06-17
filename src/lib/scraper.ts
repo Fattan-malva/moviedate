@@ -19,6 +19,7 @@ import {
   parseYear,
   resolveImageUrl,
   getProxiedImageUrl,
+  getProxiedVideoUrl,
   resolveUrl,
 } from "./scraper-utils";
 
@@ -167,6 +168,23 @@ function extractDetailFromNuxtPayload(html: string, slug: string): DetailData | 
   const arr = parseNuxtPayload(html);
   if (!arr) return null;
 
+  // First, find the main detail wrapper with subject + resource
+  let subjectId = "";
+  let resourceData: any = null;
+
+  for (let i = 0; i < arr.length; i++) {
+    const val = arr[i];
+    if (!val || typeof val !== "object" || Array.isArray(val)) continue;
+    if ("subject" in val && "resource" in val && "stars" in val) {
+      const wrapper = resolveNuxtRef(arr, i);
+      if (wrapper?.subject?.subjectId) {
+        subjectId = String(wrapper.subject.subjectId);
+        resourceData = wrapper.resource;
+        break;
+      }
+    }
+  }
+
   // Find the subject object with cover and title
   for (let i = 0; i < arr.length; i++) {
     const val = arr[i];
@@ -180,6 +198,11 @@ function extractDetailFromNuxtPayload(html: string, slug: string): DetailData | 
     const thumbnail = (cover && typeof cover === "object") ? (cover.url || "") : (typeof cover === "string" ? cover : "");
 
     if (!thumbnail || !thumbnail.includes("pbcdn")) continue;
+
+    // Use subjectId from wrapper if not found in subject
+    if (!subjectId && subject.subjectId) {
+      subjectId = String(subject.subjectId);
+    }
 
     const genreStr = subject.genre || "";
     const genres = typeof genreStr === "string" && genreStr.length > 0
@@ -195,12 +218,32 @@ function extractDetailFromNuxtPayload(html: string, slug: string): DetailData | 
         })).filter((c: any) => c.name)
       : undefined;
 
+    // Extract episodes from resource.seasons
+    const episodes: Episode[] = [];
+    if (resourceData?.seasons) {
+      for (const season of resourceData.seasons) {
+        const se = season.se || 0;
+        const maxEp = season.maxEp || 0;
+        for (let ep = 1; ep <= maxEp; ep++) {
+          episodes.push({
+            slug: `${slug}-s${se}e${ep}`,
+            number: String(ep),
+            title: `Season ${se} Episode ${ep}`,
+            season: se,
+          });
+        }
+      }
+    }
+
+    // Determine type
+    const isTvSeries = subject.subjectType === 2 || (resourceData?.seasons?.length > 1) || episodes.length > 1;
+
     return {
       slug: subject.detailPath || slug,
       title: subject.title,
       thumbnail: getProxiedImageUrl(thumbnail),
       poster: getProxiedImageUrl(thumbnail),
-      type: subject.subjectType === 2 ? "movie" : "tv-series",
+      type: isTvSeries ? "tv-series" : "movie",
       rating: subject.imdbRatingValue || undefined,
       year: parseYear(subject.releaseDate || "") || undefined,
       synopsis: subject.description || undefined,
@@ -208,6 +251,10 @@ function extractDetailFromNuxtPayload(html: string, slug: string): DetailData | 
       duration: subject.duration ? String(subject.duration) : undefined,
       country: subject.countryName || undefined,
       cast,
+      episodes: episodes.length > 0 ? episodes : undefined,
+      // Don't set streamServers here — will be fetched via play API
+      subjectId: subjectId || undefined,
+      resource: resourceData || undefined,
     };
   }
 
@@ -808,6 +855,75 @@ export async function search(query: string, page = 1): Promise<ListResponse<Cont
   return { items, currentPage: page, totalPages: 1 };
 }
 
+// ─── Play API Integration ────────────────────────────────────────────────────
+// movibox.net serves actual video streams via their internal play API.
+// The trailer URL from Nuxt payload is NOT the real video.
+
+const PLAY_API_BASE = "https://movibox.net/wefeed-h5api-bff/subject/play";
+
+/**
+ * Fetch actual video streams from movibox's play API.
+ * @param subjectId - The subject ID from Nuxt payload (e.g. "6245590300333851720")
+ * @param season - Season number (0 for movies, 1+ for TV series)
+ * @param episode - Episode number (0 for movies, 1+ for TV series)
+ * @param detailPath - The detail slug/path
+ * @returns Array of StreamServer with quality labels
+ */
+export async function getPlayStreams(
+  subjectId: string,
+  season: number,
+  episode: number,
+  detailPath: string
+): Promise<StreamServer[]> {
+  const params = new URLSearchParams({
+    subjectId,
+    se: String(season),
+    ep: String(episode),
+    detailPath,
+    streamSignType: "1",
+  });
+
+  const url = `${PLAY_API_BASE}?${params.toString()}`;
+  const referer = `https://movibox.net/movies/${detailPath}?id=${subjectId}&type=/tv-series/detail&detailSe=${season}&detailEp=${episode}&lang=en`;
+
+  try {
+    const { data } = await httpClient.get<any>(url, {
+      headers: {
+        Referer: referer,
+        Origin: "https://movibox.net",
+      },
+    });
+
+    const streams = data?.data?.streams;
+    if (!Array.isArray(streams) || streams.length === 0) return [];
+
+    return streams.map((s: any) => ({
+      name: `${s.resolutions}p`,
+      url: getProxiedVideoUrl(s.url),
+      resolution: s.resolutions,
+      format: s.format,
+      size: s.size,
+      duration: s.duration,
+      codecName: s.codecName,
+    }));
+  } catch (e) {
+    console.error("Play API error:", e);
+    return [];
+  }
+}
+
+/**
+ * Fetch video streams for a specific episode of a TV series.
+ */
+export async function getEpisodeStreams(
+  subjectId: string,
+  season: number,
+  episode: number,
+  detailPath: string
+): Promise<StreamServer[]> {
+  return getPlayStreams(subjectId, season, episode, detailPath);
+}
+
 export async function getDetail(slug: string): Promise<DetailData> {
   const path = slug.startsWith("/") ? slug : `/detail/${slug}`;
   const $ = await fetchPageDynamic(path);
@@ -816,10 +932,31 @@ export async function getDetail(slug: string): Promise<DetailData> {
   const rawHtml = (globalThis as any).__MOVIBOX_RAW_HTML__ || $.html();
   const nuxtDetail = extractDetailFromNuxtPayload(rawHtml, slug);
   if (nuxtDetail) {
-    // Still extract episodes and stream servers from HTML
-    nuxtDetail.episodes = extractEpisodes($);
-    nuxtDetail.streamServers = extractStreamServers($);
+    // Extract episodes and stream servers from HTML as fallback
+    const htmlEpisodes = extractEpisodes($);
+    const htmlServers = extractStreamServers($);
+    
+    // Only use HTML data if Nuxt didn't provide them
+    if (!nuxtDetail.episodes || nuxtDetail.episodes.length === 0) {
+      nuxtDetail.episodes = htmlEpisodes;
+    }
+    if (!nuxtDetail.streamServers || nuxtDetail.streamServers.length === 0) {
+      nuxtDetail.streamServers = htmlServers;
+    }
     nuxtDetail.relatedContent = extractItems($);
+
+    // Fetch actual video streams via play API if we have subjectId
+    if (nuxtDetail.subjectId) {
+      try {
+        const playData = await getPlayStreams(nuxtDetail.subjectId, 0, 0, nuxtDetail.slug || slug);
+        if (playData.length > 0) {
+          nuxtDetail.streamServers = playData;
+        }
+      } catch (e) {
+        console.error("Play API failed, using fallback:", e);
+      }
+    }
+
     return nuxtDetail;
   }
   
@@ -908,7 +1045,7 @@ export async function getEpisodeDetail(slug: string): Promise<EpisodeDetail> {
       
       if (videoUrl || servers.length > 0) {
         return {
-          videoUrl: resolveUrl(videoUrl, getDomain()),
+          videoUrl: getProxiedVideoUrl(resolveUrl(videoUrl, getDomain())),
           streamServers: servers,
           prev: $("a[href*='prev'], .prev a, a[rel='prev']").first().attr("href"),
           next: $("a[href*='next'], .next a, a[rel='next']").first().attr("href"),
@@ -1005,7 +1142,7 @@ function extractStreamServers($: cheerio.CheerioAPI): StreamServer[] {
     const url = $(el).attr("src") || "";
     if (!url || seen.has(url)) return;
     seen.add(url);
-    servers.push({ name: "Direct", url: resolveUrl(url, getDomain()) });
+    servers.push({ name: "Direct", url: getProxiedVideoUrl(resolveUrl(url, getDomain())) });
   });
   
   // Extract from iframes (embed players)
@@ -1021,7 +1158,7 @@ function extractStreamServers($: cheerio.CheerioAPI): StreamServer[] {
     const url = $(el).attr("href") || "";
     if (!url || seen.has(url)) return;
     seen.add(url);
-    servers.push({ name: $(el).text().trim() || `Link ${i + 1}`, url: resolveUrl(url, getDomain()) });
+    servers.push({ name: $(el).text().trim() || `Link ${i + 1}`, url: getProxiedVideoUrl(resolveUrl(url, getDomain())) });
   });
   
   // Extract from data attributes
@@ -1030,7 +1167,7 @@ function extractStreamServers($: cheerio.CheerioAPI): StreamServer[] {
     const url = $el.attr("data-src") || $el.attr("data-video") || $el.attr("data-url") || "";
     if (!url || seen.has(url)) return;
     seen.add(url);
-    servers.push({ name: $el.attr("data-name") || `Source ${i + 1}`, url: resolveUrl(url, getDomain()) });
+    servers.push({ name: $el.attr("data-name") || `Source ${i + 1}`, url: getProxiedVideoUrl(resolveUrl(url, getDomain())) });
   });
   
   return servers;

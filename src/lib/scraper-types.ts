@@ -19,11 +19,17 @@ export interface Episode {
   number: string;
   title?: string;
   date?: string;
+  season?: number;
 }
 
 export interface StreamServer {
   name: string;
   url: string;
+  resolution?: string;
+  format?: string;
+  size?: number;
+  duration?: number;
+  codecName?: string;
 }
 
 export interface EpisodeDetail {
@@ -77,6 +83,8 @@ export interface DetailData {
   episodes?: Episode[];
   streamServers?: StreamServer[];
   relatedContent?: ContentItem[];
+  subjectId?: string;
+  resource?: any;
 }
 
 export interface SearchResult extends ContentItem {}

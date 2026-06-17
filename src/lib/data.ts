@@ -154,7 +154,7 @@ function toMovieItem(item: ContentItem | DetailData, category = "All"): MovieIte
     episodes:
       "episodes" in item && item.episodes
         ? item.episodes.map((episode) => ({
-            season: 1,
+            season: episode.season || 1,
             episode: Number(episode.number) || 0,
             title: episode.title || `Episode ${episode.number}`,
             slug: episode.slug,
@@ -166,6 +166,7 @@ function toMovieItem(item: ContentItem | DetailData, category = "All"): MovieIte
     reviews: [],
     url: `${process.env.URL_SCRAPPING?.replace(/\/+$/, "") ?? "https://movibox.net"}/detail/${item.slug}`,
     streamServers: "streamServers" in item ? item.streamServers : undefined,
+    subjectId: "subjectId" in item ? item.subjectId : undefined,
   };
 }
 
