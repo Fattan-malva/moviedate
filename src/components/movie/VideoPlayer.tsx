@@ -212,9 +212,17 @@ export default function VideoPlayer({
   }, [onEpisodeSelect, scrollToEpisode]);
 
   // Separate dubs into audio tracks and subtitle tracks
-  // Only show English (en) and Indonesian (id) subtitles
+  // Show all subtitle tracks, prioritizing English & Indonesian
   const audioTracks = useMemo(() => dubs?.filter((d) => d.type === 0) || [], [dubs]);
-  const subtitleTracks = useMemo(() => dubs?.filter((d) => d.type === 1 && (d.lanCode === "en" || d.lanCode === "id")) || [], [dubs]);
+  const subtitleTracks = useMemo(() => {
+    const subs = dubs?.filter((d) => d.type === 1) || [];
+    const priority = subs.filter((d) =>
+      d.lanCode?.startsWith("en") || d.lanCode?.startsWith("id") ||
+      d.lanName?.toLowerCase().includes("english") || d.lanName?.toLowerCase().includes("indonesia")
+    );
+    const rest = subs.filter((d) => !priority.includes(d));
+    return [...priority, ...rest];
+  }, [dubs]);
 
   if (!activeUrl) {
     return (
@@ -324,6 +332,36 @@ export default function VideoPlayer({
         </div>
       )}
 
+      {/* Dubbing / Audio Selector */}
+      {audioTracks.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Dubbing</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {audioTracks.map((dub) => (
+              <button
+                key={dub.subjectId}
+                onClick={() => onAudioChange?.(dub)}
+                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                  externalAudioId === dub.subjectId
+                    ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
+                    : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${externalAudioId === dub.subjectId ? "bg-white" : "bg-gray-500"}`} />
+                {dub.lanName}
+                {dub.original && (
+                  <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                    Original
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Subtitle Selector (separate from dubbing) */}
       {subtitleTracks.length > 0 && (
         <div className="mt-4">
@@ -361,36 +399,6 @@ export default function VideoPlayer({
               >
                 <Languages className="w-3 h-3" />
                 {dub.lanName}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Dubbing / Audio Selector */}
-      {audioTracks.length > 0 && (
-        <div className="mt-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Dubbing</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {audioTracks.map((dub) => (
-              <button
-                key={dub.subjectId}
-                onClick={() => onAudioChange?.(dub)}
-                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                  externalAudioId === dub.subjectId
-                    ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
-                    : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${externalAudioId === dub.subjectId ? "bg-white" : "bg-gray-500"}`} />
-                {dub.lanName}
-                {dub.original && (
-                  <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-                    Original
-                  </span>
-                )}
               </button>
             ))}
           </div>
