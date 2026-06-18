@@ -108,19 +108,27 @@ export function getProxiedImageUrl(absoluteImageUrl: string): string {
 export function getProxiedVideoUrl(videoUrl: string): string {
   if (!videoUrl) return "";
 
-  // Proxy video CDN URLs through our API to avoid referer/hotlinking blocks.
-  // The browser's referer (e.g. localhost:3000) is rejected by CDNs that
-  // only accept requests from movibox.net. Our proxy sets the correct referer.
-  if (
+  const isCdnUrl =
     videoUrl.includes("hakunaymatata.com") ||
     videoUrl.includes("macdn") ||
     videoUrl.includes("aoneroom") ||
-    videoUrl.includes("pbcdn")
-  ) {
-    return `/api/proxy-video?url=${encodeURIComponent(videoUrl)}`;
+    videoUrl.includes("pbcdn");
+
+  if (!isCdnUrl) {
+    return videoUrl;
   }
 
-  // Return other URLs directly (e.g. external embed URLs)
+  // Proxy through Cloudflare Worker for better CDN compatibility
+  const cfWorkerUrl =
+    (typeof process !== "undefined" ? process.env.CF_WORKER_URL : undefined) ||
+    (typeof window !== "undefined" ? (window as any).__ENV?.CF_WORKER_URL : undefined) ||
+    "";
+
+  if (cfWorkerUrl) {
+    return `${cfWorkerUrl.replace(/\/+$/, "")}/proxy-video?url=${encodeURIComponent(videoUrl)}`;
+  }
+
+  // Fallback: return direct URL (may not work due to referer checks)
   return videoUrl;
 }
 

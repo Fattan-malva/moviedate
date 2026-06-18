@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   },
   env: {
     URL_SCRAPPING: process.env.URL_SCRAPPING || "https://moviebox.ph/",
+    CF_WORKER_URL: process.env.CF_WORKER_URL || "",
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
