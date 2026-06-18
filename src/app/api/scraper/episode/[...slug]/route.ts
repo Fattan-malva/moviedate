@@ -15,15 +15,17 @@ export async function GET(request: NextRequest, { params }: Props) {
   // Check for play API params
   const subjectId = request.nextUrl.searchParams.get("subjectId");
   const contentType = request.nextUrl.searchParams.get("type") || "tv-series";
-  const isMovie = contentType === "movie";
-  // For movies, always use se=0, ep=0; for TV series use actual values
-  const season = isMovie ? 0 : parseInt(request.nextUrl.searchParams.get("se") || "1");
-  const episode = isMovie ? 0 : parseInt(request.nextUrl.searchParams.get("ep") || "1");
+  // If explicit se/ep params provided, use them; otherwise treat as movie (0, 0)
+  const seasonParam = request.nextUrl.searchParams.get("se");
+  const episodeParam = request.nextUrl.searchParams.get("ep");
+  const hasSeEp = seasonParam !== null && episodeParam !== null && seasonParam !== "";
+  const season = hasSeEp ? parseInt(seasonParam!) : 0;
+  const episode = hasSeEp ? parseInt(episodeParam!) : 0;
 
   if (subjectId) {
     // Use play API for actual video streams
     try {
-      const streams = await getEpisodeStreams(subjectId, season, episode, slugStr);
+      const streams = await getEpisodeStreams(subjectId, season, episode, slugStr, contentType);
 
       if (!streams || streams.length === 0) {
         return NextResponse.json({

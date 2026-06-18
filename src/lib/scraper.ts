@@ -996,11 +996,20 @@ export async function getPlayStreams(
   subjectId: string,
   season: number,
   episode: number,
-  detailPath: string
+  detailPath: string,
+  contentType?: string
 ): Promise<StreamServer[]> {
   // Strip episode suffix like -s1e1, -s2e3 etc. from detailPath
   // The Play API expects the base movie/show slug, not the episode slug
   const cleanDetailPath = detailPath.replace(/-s\d+e\d+$/, "");
+
+  // Determine content type for referer URL:
+  // - movies (se=0, ep=0): type=/movie/detail with empty detailSe/detailEp
+  // - TV series: type=/tv-series/detail with season/ep number
+  const isMovieType = contentType === "movie" || (season === 0 && episode === 0);
+  const typePath = isMovieType ? "/movie/detail" : "/tv-series/detail";
+  const detailSe = isMovieType ? "" : String(season);
+  const detailEp = isMovieType ? "" : String(episode);
 
   const params = new URLSearchParams({
     subjectId,
@@ -1011,7 +1020,7 @@ export async function getPlayStreams(
   });
 
   const url = `${PLAY_API_BASE}?${params.toString()}`;
-  const referer = `https://movibox.net/movies/${cleanDetailPath}?id=${subjectId}&type=/tv-series/detail&detailSe=${season}&detailEp=${episode}&lang=en`;
+  const referer = `https://movibox.net/movies/${cleanDetailPath}?id=${subjectId}&type=${typePath}&detailSe=${detailSe}&detailEp=${detailEp}&lang=en`;
 
   // Try with retry logic
   for (let attempt = 0; attempt <= PLAY_API_MAX_RETRIES; attempt++) {
@@ -1035,9 +1044,10 @@ export async function getEpisodeStreams(
   subjectId: string,
   season: number,
   episode: number,
-  detailPath: string
+  detailPath: string,
+  contentType?: string
 ): Promise<StreamServer[]> {
-  return getPlayStreams(subjectId, season, episode, detailPath);
+  return getPlayStreams(subjectId, season, episode, detailPath, contentType);
 }
 
 export async function getDetail(slug: string): Promise<DetailData> {
@@ -1110,8 +1120,14 @@ export async function getDetail(slug: string): Promise<DetailData> {
     if (!nuxtDetail.episodes || nuxtDetail.episodes.length === 0) {
       nuxtDetail.episodes = htmlEpisodes;
     }
+    // IMPORTANT: DON'T use HTML-extracted stream servers when we have
+    // a subjectId for the Play API. HTML extraction picks up trailer
+    // video elements from the page, not the actual movie/episode streams.
+    // The actual streams must be fetched via the Play API.
     if (!nuxtDetail.streamServers || nuxtDetail.streamServers.length === 0) {
-      nuxtDetail.streamServers = htmlServers;
+      if (!nuxtDetail.subjectId) {
+        nuxtDetail.streamServers = htmlServers;
+      }
     }
     nuxtDetail.relatedContent = extractItems($);
 

@@ -108,16 +108,11 @@ export function getProxiedImageUrl(absoluteImageUrl: string): string {
 export function getProxiedVideoUrl(videoUrl: string): string {
   if (!videoUrl) return "";
 
-  // For hakunaymatata CDN (actual video streams), pass URL directly.
-  // The browser sends proper headers from the user's real IP, avoiding
-  // 403 blocks that affect Vercel serverless IPs.
-  // The CDN uses signed URLs (sign + t params) which are already authenticated.
-  if (videoUrl.includes("hakunaymatata.com")) {
-    return videoUrl;
-  }
-
-  // Proxy other CDN URLs through our API to avoid CORS/hotlinking
+  // Proxy video CDN URLs through our API to avoid referer/hotlinking blocks.
+  // The browser's referer (e.g. localhost:3000) is rejected by CDNs that
+  // only accept requests from movibox.net. Our proxy sets the correct referer.
   if (
+    videoUrl.includes("hakunaymatata.com") ||
     videoUrl.includes("macdn") ||
     videoUrl.includes("aoneroom") ||
     videoUrl.includes("pbcdn")

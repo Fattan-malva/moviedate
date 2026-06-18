@@ -20,10 +20,11 @@ export async function GET(request: NextRequest) {
 
   const range = request.headers.get("range");
 
-  // Try multiple referer strategies for CDN compatibility
+  // Try multiple referer strategies for CDN compatibility.
+  // movibox.net referer is tried first since most CDNs check for this.
   const refererStrategies = [
-    new URL(url).origin + "/",
     "https://movibox.net/",
+    new URL(url).origin + "/",
     undefined,
   ];
 

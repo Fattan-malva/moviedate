@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import VideoPlayer from "./VideoPlayer";
 
 interface StreamServer {
@@ -80,6 +80,26 @@ export default function MoviePlayerWrapper({
       ? episodes[initialIdx + 1]?.slug
       : undefined
   );
+
+  // Auto-load stream on mount when no initial stream is available
+  const hasInitialStream = !!(initialVideoUrl || initialStreamServers?.length);
+  const initialLoadDone = useRef(false);
+
+  useEffect(() => {
+    if (initialLoadDone.current) return;
+    initialLoadDone.current = true;
+
+    // For movies (no episodes) or when no initial stream, auto-trigger load
+    if (!hasInitialStream && subjectId) {
+      const isMovie = episodes.length === 0;
+      if (isMovie) {
+        loadEpisode(slug, 0, 0);
+      } else if (episodes.length > 0) {
+        loadEpisode(episodes[0].slug, episodes[0].season, parseInt(episodes[0].number));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadEpisode = useCallback(async (episodeSlug: string, season?: number, episode?: number) => {
     setLoading(true);
