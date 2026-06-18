@@ -900,13 +900,74 @@ export async function getLatest(): Promise<ListResponse<ContentItem>> {
 
 export async function search(query: string, page = 1): Promise<ListResponse<ContentItem>> {
   const q = encodeURIComponent(query.trim());
-  const paths = [`/search/${q}?page=${page}`, `/search?keyword=${q}&page=${page}`, `/?keyword=${q}&page=${page}`];
+  // Primary: movibox search result page with Nuxt 3 payload
+  const paths = [
+    `/searchResult?keyword=${q}`,
+    `/search/${q}?page=${page}`,
+    `/search?keyword=${q}&page=${page}`,
+    `/?keyword=${q}&page=${page}`,
+  ];
 
   for (const path of paths) {
     try {
-      const $ = await fetchPage(path);
-      const items = extractItems($);
-      if (items.length) return { items, ...pagination($, page) };
+      const { $, html } = await fetchPageWithHtml(path);
+
+      // Try to extract items from Nuxt 3 payload first (has images)
+      const arr = parseNuxtPayload(html);
+      let items: ContentItem[] = [];
+
+      if (arr) {
+        const seenSlugs = new Set<string>();
+        for (let i = 0; i < arr.length; i++) {
+          const val = arr[i];
+          if (!val || typeof val !== "object") continue;
+          const resolved = resolveNuxtRef(arr, i);
+          if (!resolved || typeof resolved !== "object") continue;
+
+          // Check if it's a subject with title, detailPath and cover (has image)
+          if (resolved.title && resolved.detailPath && resolved.cover) {
+            const item = nuxtSubjectToContentItem(resolved, resolved.detailPath);
+            if (item && item.title && item.thumbnail && !seenSlugs.has(item.slug)) {
+              seenSlugs.add(item.slug);
+              items.push(item);
+            }
+          }
+
+          // Check for subjects array
+          if (resolved.subjects && Array.isArray(resolved.subjects)) {
+            for (const subject of resolved.subjects) {
+              const subj = (typeof subject === "number" ? resolveNuxtRef(arr, subject) : subject) || subject;
+              const item = nuxtSubjectToContentItem(subj, subj.detailPath || "");
+              if (item && item.title && item.thumbnail && !seenSlugs.has(item.slug)) {
+                seenSlugs.add(item.slug);
+                items.push(item);
+              }
+            }
+          }
+
+          // Check for arrays of subjects (search results are often in a flat array)
+          if (Array.isArray(resolved)) {
+            for (const element of resolved) {
+              if (element && typeof element === "object" && element.title && element.cover) {
+                const item = nuxtSubjectToContentItem(element, element.detailPath || "");
+                if (item && item.title && item.thumbnail && !seenSlugs.has(item.slug)) {
+                  seenSlugs.add(item.slug);
+                  items.push(item);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Fallback to HTML extraction if Nuxt didn't yield results
+      if (items.length === 0) {
+        items = extractItems($);
+      }
+
+      if (items.length > 0) {
+        return { items: uniqueItems(items), ...pagination($, page) };
+      }
     } catch {
       continue;
     }

@@ -1,9 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { MovieItem } from "@/lib/types";
 import MovieGrid from "@/components/movie/MovieGrid";
 import { MovieGridSkeleton } from "@/components/ui/Skeleton";
+
+interface SearchItem {
+  slug: string;
+  title: string;
+  thumbnail: string;
+  type?: string;
+  rating?: string;
+  year?: string;
+  genres?: string[];
+}
 
 interface Props {
   allMovies: MovieItem[];
@@ -14,7 +24,27 @@ interface Props {
 }
 
 export default function SearchResults({ allMovies, query, type, genre, year }: Props) {
-  const results = useMemo(() => {
+  const [apiResults, setApiResults] = useState<SearchItem[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setApiResults(null);
+      return;
+    }
+    setLoading(true);
+    fetch(`/api/scraper/search?q=${encodeURIComponent(query.trim())}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setApiResults(data.items || []);
+      })
+      .catch(() => {
+        setApiResults([]);
+      })
+      .finally(() => setLoading(false));
+  }, [query]);
+
+  const localResults = useMemo(() => {
     return allMovies.filter((m) => {
       if (query) {
         const q = query.toLowerCase();
@@ -34,13 +64,43 @@ export default function SearchResults({ allMovies, query, type, genre, year }: P
     });
   }, [allMovies, query, type, genre, year]);
 
+  const isSearching = !!query.trim();
+
+  function mapToMovieItem(item: any): MovieItem {
+    return {
+      id: item.slug,
+      slug: item.slug,
+      title: item.title,
+      year: item.year ? Number(item.year) : 0,
+      rating: item.rating || "",
+      duration: "",
+      country: "",
+      genres: item.genres || [],
+      description: "",
+      poster: item.thumbnail || item.poster || "",
+      cast: [],
+      episodes: [],
+      type: (item.type as any) || "movie",
+      category: "",
+      imdbRating: Number(item.rating) || 0,
+      reviews: [],
+      url: "",
+    };
+  }
+
+  const displayItems = isSearching ? (apiResults || []).map(mapToMovieItem) : localResults;
+
+  if (loading) {
+    return <MovieGridSkeleton />;
+  }
+
   return (
     <div>
       <p className="text-sm text-gray-500 mb-4">
-        {results.length} {results.length === 1 ? "result" : "results"} found
+        {displayItems.length} {displayItems.length === 1 ? "result" : "results"} found
       </p>
-      {results.length > 0 ? (
-        <MovieGrid items={results} showType />
+      {displayItems.length > 0 ? (
+        <MovieGrid items={displayItems} showType />
       ) : (
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-full bg-white/[0.05] flex items-center justify-center mx-auto mb-4">
