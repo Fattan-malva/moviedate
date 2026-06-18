@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   Play, Loader2, AlertCircle, ChevronLeft, ChevronRight,
-  Check, Eye, Monitor, Film
+  Check, Eye, Monitor, Film, Languages
 } from "lucide-react";
 
 interface StreamServer {
@@ -24,6 +24,15 @@ interface SeasonGroup {
   episodes: Episode[];
 }
 
+interface DubTrack {
+  subjectId: string;
+  lanName: string;
+  lanCode: string;
+  type: number;
+  original?: boolean;
+  detailPath: string;
+}
+
 interface VideoPlayerProps {
   videoUrl?: string;
   streamServers?: StreamServer[];
@@ -33,6 +42,11 @@ interface VideoPlayerProps {
   onEpisodeSelect?: (slug: string, season?: number, episode?: number) => void;
   prevSlug?: string;
   nextSlug?: string;
+  dubs?: DubTrack[];
+  activeAudioId?: string;
+  activeSubId?: string;
+  onAudioChange?: (dub: DubTrack) => void;
+  onSubtitleChange?: (dub: DubTrack) => void;
 }
 
 function isIframeUrl(url: string): boolean {
@@ -124,6 +138,11 @@ export default function VideoPlayer({
   onEpisodeSelect,
   prevSlug,
   nextSlug,
+  dubs,
+  activeAudioId: externalAudioId,
+  activeSubId: externalSubId,
+  onAudioChange,
+  onSubtitleChange,
 }: VideoPlayerProps) {
   const [activeUrl, setActiveUrl] = useState(videoUrl || streamServers[0]?.url || "");
   const [activeServer, setActiveServer] = useState(0);
@@ -183,6 +202,11 @@ export default function VideoPlayer({
     onEpisodeSelect?.(slug, season, epNum);
     setTimeout(() => scrollToEpisode(slug), 100);
   }, [onEpisodeSelect, scrollToEpisode]);
+
+  // Separate dubs into audio tracks and subtitle tracks
+  // Only show English (en) and Indonesian (id) subtitles
+  const audioTracks = useMemo(() => dubs?.filter((d) => d.type === 0) || [], [dubs]);
+  const subtitleTracks = useMemo(() => dubs?.filter((d) => d.type === 1 && (d.lanCode === "en" || d.lanCode === "id")) || [], [dubs]);
 
   if (!activeUrl) {
     return (
@@ -292,6 +316,86 @@ export default function VideoPlayer({
         </div>
       )}
 
+      {/* Audio & Subtitle Selector */}
+      {dubs && dubs.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Languages className="w-3.5 h-3.5 text-gray-500" />
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Audio & Subtitles</span>
+          </div>
+
+          <div className="space-y-2">
+            {/* Audio Tracks */}
+            {audioTracks.length > 0 && (
+              <div>
+                <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider block mb-1.5">Audio</span>
+                <div className="flex flex-wrap gap-2">
+                  {audioTracks.map((dub) => (
+                    <button
+                      key={dub.subjectId}
+                      onClick={() => onAudioChange?.(dub)}
+                      className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                        externalAudioId === dub.subjectId
+                          ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
+                          : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${externalAudioId === dub.subjectId ? "bg-white" : "bg-gray-500"}`} />
+                      {dub.lanName}
+                      {dub.original && (
+                        <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                          Original
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Subtitle Tracks */}
+            {subtitleTracks.length > 0 && (
+              <div>
+                <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider block mb-1.5">Subtitles</span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => onSubtitleChange?.({
+                      subjectId: "",
+                      lanName: "Off",
+                      lanCode: "",
+                      type: 1,
+                      detailPath: "",
+                    })}
+                    className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                      !externalSubId
+                        ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
+                        : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
+                    }`}
+                  >
+                    <Languages className="w-3 h-3" />
+                    Off
+                  </button>
+                  {subtitleTracks.map((dub) => (
+                    <button
+                      key={dub.subjectId}
+                      onClick={() => onSubtitleChange?.(dub)}
+                      className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                        externalSubId === dub.subjectId
+                          ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
+                          : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
+                      }`}
+                    >
+                      <Languages className="w-3 h-3" />
+                      {dub.lanName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Episode Navigation */}
       {episodes.length > 0 && (
         <div className="mt-5">
@@ -373,7 +477,6 @@ export default function VideoPlayer({
                                   : "bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06]"
                             }`}
                           >
-                            {/* Episode Number Badge */}
                             <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold transition-all ${
                               isActive
                                 ? "bg-violet-600 text-white"
@@ -390,7 +493,6 @@ export default function VideoPlayer({
                               )}
                             </div>
 
-                            {/* Episode Info */}
                             <div className="min-w-0 flex-1">
                               <div className={`text-xs font-medium truncate ${
                                 isActive ? "text-white" : isWatched ? "text-gray-400" : "text-gray-300"
@@ -404,7 +506,6 @@ export default function VideoPlayer({
                               )}
                             </div>
 
-                            {/* Watched Badge */}
                             {isWatched && !isActive && (
                               <div className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center">
                                 <Eye className="w-3 h-3 text-emerald-400" />

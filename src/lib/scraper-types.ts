@@ -32,12 +32,22 @@ export interface StreamServer {
   codecName?: string;
 }
 
+export interface DubTrack {
+  subjectId: string;
+  lanName: string;
+  lanCode: string;
+  type: number;       // 0 = audio/dub, 1 = subtitle
+  original?: boolean;
+  detailPath: string;
+}
+
 export interface EpisodeDetail {
   videoUrl?: string;
   streamServers?: StreamServer[];
   prev?: string;
   next?: string;
   episodes?: Episode[];
+  dubs?: DubTrack[];
 }
 
 export interface Genre {
@@ -85,6 +95,8 @@ export interface DetailData {
   relatedContent?: ContentItem[];
   subjectId?: string;
   resource?: any;
+  dubs?: DubTrack[];
+  subtitles?: string;
 }
 
 export interface SearchResult extends ContentItem {}

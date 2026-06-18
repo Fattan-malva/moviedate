@@ -235,6 +235,20 @@ function extractDetailFromNuxtPayload(html: string, slug: string): DetailData | 
       }
     }
 
+    // Extract dubs/subtitles from subject
+    const dubs = Array.isArray(subject.dubs)
+      ? subject.dubs.map((d: any) => ({
+          subjectId: String(d.subjectId || ""),
+          lanName: d.lanName || "",
+          lanCode: d.lanCode || "",
+          type: d.type ?? 0,
+          original: !!d.original,
+          detailPath: d.detailPath || "",
+        }))
+      : undefined;
+
+    const subtitlesStr = typeof subject.subtitles === "string" ? subject.subtitles : undefined;
+
     // Determine type
     const isTvSeries = subject.subjectType === 2 || (resourceData?.seasons?.length > 1) || episodes.length > 1;
 
@@ -255,6 +269,8 @@ function extractDetailFromNuxtPayload(html: string, slug: string): DetailData | 
       // Don't set streamServers here — will be fetched via play API
       subjectId: subjectId || undefined,
       resource: resourceData || undefined,
+      dubs,
+      subtitles: subtitlesStr,
     };
   }
 
@@ -1058,8 +1074,14 @@ export async function getPlayStreams(
   season: number,
   episode: number,
   detailPath: string,
-  contentType?: string
+  contentType?: string,
+  dubSubjectId?: string,
+  dubDetailPath?: string
 ): Promise<StreamServer[]> {
+  // Use dub-specific subjectId/detailPath if switching audio/subtitle track
+  const activeSubjectId = dubSubjectId || subjectId;
+  const activeDetailPath = (dubDetailPath || detailPath).replace(/-s\d+e\d+$/, "");
+
   // Strip episode suffix like -s1e1, -s2e3 etc. from detailPath
   // The Play API expects the base movie/show slug, not the episode slug
   const cleanDetailPath = detailPath.replace(/-s\d+e\d+$/, "");
@@ -1073,15 +1095,15 @@ export async function getPlayStreams(
   const detailEp = isMovieType ? "" : String(episode);
 
   const params = new URLSearchParams({
-    subjectId,
+    subjectId: activeSubjectId,
     se: String(season),
     ep: String(episode),
-    detailPath: cleanDetailPath,
+    detailPath: activeDetailPath,
     streamSignType: "1",
   });
 
   const url = `${PLAY_API_BASE}?${params.toString()}`;
-  const referer = `https://movibox.net/movies/${cleanDetailPath}?id=${subjectId}&type=${typePath}&detailSe=${detailSe}&detailEp=${detailEp}&lang=en`;
+  const referer = `https://movibox.net/movies/${activeDetailPath}?id=${activeSubjectId}&type=${typePath}&detailSe=${detailSe}&detailEp=${detailEp}&lang=en`;
 
   // Try with retry logic
   for (let attempt = 0; attempt <= PLAY_API_MAX_RETRIES; attempt++) {
@@ -1106,9 +1128,11 @@ export async function getEpisodeStreams(
   season: number,
   episode: number,
   detailPath: string,
-  contentType?: string
+  contentType?: string,
+  dubSubjectId?: string,
+  dubDetailPath?: string
 ): Promise<StreamServer[]> {
-  return getPlayStreams(subjectId, season, episode, detailPath, contentType);
+  return getPlayStreams(subjectId, season, episode, detailPath, contentType, dubSubjectId, dubDetailPath);
 }
 
 export async function getDetail(slug: string): Promise<DetailData> {

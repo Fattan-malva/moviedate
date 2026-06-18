@@ -21,11 +21,14 @@ export async function GET(request: NextRequest, { params }: Props) {
   const hasSeEp = seasonParam !== null && episodeParam !== null && seasonParam !== "";
   const season = hasSeEp ? parseInt(seasonParam!) : 0;
   const episode = hasSeEp ? parseInt(episodeParam!) : 0;
+  // Dub/subtitle track switching
+  const dubSubjectId = request.nextUrl.searchParams.get("dubSubjectId");
+  const dubDetailPath = request.nextUrl.searchParams.get("dubDetailPath");
 
   if (subjectId) {
     // Use play API for actual video streams
     try {
-      const streams = await getEpisodeStreams(subjectId, season, episode, slugStr, contentType);
+      const streams = await getEpisodeStreams(subjectId, season, episode, slugStr, contentType, dubSubjectId || undefined, dubDetailPath || undefined);
 
       if (!streams || streams.length === 0) {
         return NextResponse.json({

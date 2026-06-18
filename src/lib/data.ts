@@ -167,6 +167,7 @@ function toMovieItem(item: ContentItem | DetailData, category = "All"): MovieIte
     url: `${process.env.URL_SCRAPPING?.replace(/\/+$/, "") ?? "https://movibox.net"}/detail/${item.slug}`,
     streamServers: "streamServers" in item ? item.streamServers : undefined,
     subjectId: "subjectId" in item ? item.subjectId : undefined,
+    dubs: "dubs" in item ? item.dubs : undefined,
   };
 }
 

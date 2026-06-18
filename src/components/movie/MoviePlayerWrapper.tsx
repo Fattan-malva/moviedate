@@ -16,6 +16,15 @@ interface Episode {
   season?: number;
 }
 
+interface DubTrack {
+  subjectId: string;
+  lanName: string;
+  lanCode: string;
+  type: number;
+  original?: boolean;
+  detailPath: string;
+}
+
 interface EpisodeDetail {
   videoUrl?: string;
   streamServers?: StreamServer[];
@@ -25,20 +34,14 @@ interface EpisodeDetail {
 }
 
 interface MoviePlayerWrapperProps {
-  /** Initial video URL from detail page */
   initialVideoUrl?: string;
-  /** Initial stream servers from detail page */
   initialStreamServers?: StreamServer[];
-  /** Episode list from detail page */
   episodes?: Episode[];
-  /** Current movie slug */
   slug: string;
-  /** Movie title */
   title: string;
-  /** Subject ID for play API */
   subjectId?: string;
-  /** Content type: movie or tv-series */
   contentType?: string;
+  dubs?: DubTrack[];
 }
 
 export default function MoviePlayerWrapper({
@@ -49,9 +52,8 @@ export default function MoviePlayerWrapper({
   title,
   subjectId,
   contentType = "tv-series",
+  dubs,
 }: MoviePlayerWrapperProps) {
-  // If episodes exist, default currentSlug to the first episode's slug
-  // so the episode button is highlighted on load
   const initialEpisodeSlug = episodes.length > 0 ? episodes[0].slug : slug;
 
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl);
@@ -60,14 +62,12 @@ export default function MoviePlayerWrapper({
   const [currentEpisodes, setCurrentEpisodes] = useState(episodes);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  // Key to force VideoPlayer remount when episode changes
   const [playerKey, setPlayerKey] = useState(0);
+  const [dubKey, setDubKey] = useState(0);
 
-  // Use ref to avoid stale closure in loadEpisode
   const episodesRef = useRef(currentEpisodes);
   episodesRef.current = currentEpisodes;
 
-  // Compute initial prev/next from episodes list
   const initialIdx = useMemo(() => {
     return episodes.findIndex((ep) => ep.slug === initialEpisodeSlug);
   }, [episodes, initialEpisodeSlug]);
@@ -81,15 +81,35 @@ export default function MoviePlayerWrapper({
       : undefined
   );
 
-  // Auto-load stream on mount when no initial stream is available
   const hasInitialStream = !!(initialVideoUrl || initialStreamServers?.length);
   const initialLoadDone = useRef(false);
+
+  // Active dub/subtitle state (persists across VideoPlayer remounts)
+  const audioTracks = useMemo(() => dubs?.filter((d) => d.type === 0) || [], [dubs]);
+
+  const [activeAudioId, setActiveAudioId] = useState<string>(() => {
+    if (!dubs || dubs.length === 0) return "";
+    const original = dubs.find((d) => d.original);
+    if (original) return original.subjectId;
+    if (audioTracks.length > 0) return audioTracks[0].subjectId;
+    return "";
+  });
+  const [activeSubId, setActiveSubId] = useState<string>("");
+
+  useEffect(() => {
+    if (!dubs || dubs.length === 0) return;
+    const original = dubs.find((d) => d.original);
+    if (original && !activeAudioId) {
+      setActiveAudioId(original.subjectId);
+    } else if (!activeAudioId && audioTracks.length > 0) {
+      setActiveAudioId(audioTracks[0].subjectId);
+    }
+  }, [dubs, audioTracks, activeAudioId]);
 
   useEffect(() => {
     if (initialLoadDone.current) return;
     initialLoadDone.current = true;
 
-    // For movies (no episodes) or when no initial stream, auto-trigger load
     if (!hasInitialStream && subjectId) {
       const isMovie = episodes.length === 0;
       if (isMovie) {
@@ -101,13 +121,19 @@ export default function MoviePlayerWrapper({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadEpisode = useCallback(async (episodeSlug: string, season?: number, episode?: number) => {
+  const loadEpisode = useCallback(async (episodeSlug: string, season?: number, episode?: number, dubSubjectId?: string, dubDetailPath?: string) => {
     setLoading(true);
     setLoadError(null);
     try {
       let url: string;
       if (subjectId && season !== undefined && episode !== undefined) {
         url = `/api/scraper/episode/${episodeSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}&type=${contentType}`;
+        if (dubSubjectId) {
+          url += `&dubSubjectId=${dubSubjectId}`;
+        }
+        if (dubDetailPath) {
+          url += `&dubDetailPath=${dubDetailPath}`;
+        }
       } else {
         url = `/api/scraper/episode/${episodeSlug}?type=${contentType}`;
       }
@@ -124,10 +150,12 @@ export default function MoviePlayerWrapper({
       setVideoUrl(newUrl);
       setStreamServers(data.streamServers || []);
       setCurrentSlug(episodeSlug);
-      // Force remount so iframe/video re-renders with new URL
+
+      // Use different keys so VideoPlayer remounts with new video
+      // but dub selection state persists in this component
+      setDubKey((k) => k + 1);
       setPlayerKey((k) => k + 1);
 
-      // Compute prev/next from the LATEST episode list via ref
       const eps = episodesRef.current;
       const currentIdx = eps.findIndex(
         (ep) => ep.slug === episodeSlug || (ep.season === season && parseInt(ep.number) === episode)
@@ -139,7 +167,6 @@ export default function MoviePlayerWrapper({
           : undefined
       );
 
-      // Update episodes list if the response includes them
       if (data.episodes && data.episodes.length > 0) {
         setCurrentEpisodes(data.episodes);
       }
@@ -150,6 +177,18 @@ export default function MoviePlayerWrapper({
       setLoading(false);
     }
   }, [subjectId, contentType]);
+
+  const handleAudioChange = useCallback((dub: DubTrack) => {
+    setActiveAudioId(dub.subjectId);
+    const currentEp = currentEpisodes.find((ep) => ep.slug === currentSlug);
+    loadEpisode(currentSlug, currentEp?.season, currentEp ? parseInt(currentEp.number) : undefined, dub.subjectId, dub.detailPath);
+  }, [currentEpisodes, currentSlug, loadEpisode]);
+
+  const handleSubtitleChange = useCallback((dub: DubTrack) => {
+    setActiveSubId(dub.subjectId);
+    const currentEp = currentEpisodes.find((ep) => ep.slug === currentSlug);
+    loadEpisode(currentSlug, currentEp?.season, currentEp ? parseInt(currentEp.number) : undefined, dub.subjectId, dub.detailPath);
+  }, [currentEpisodes, currentSlug, loadEpisode]);
 
   return (
     <div className="relative">
@@ -179,9 +218,14 @@ export default function MoviePlayerWrapper({
         title={title}
         episodes={currentEpisodes}
         currentEpisodeSlug={currentSlug}
-        onEpisodeSelect={loadEpisode}
+        onEpisodeSelect={(slug, season, episode) => loadEpisode(slug, season, episode)}
         prevSlug={prevSlug}
         nextSlug={nextSlug}
+        dubs={dubs}
+        activeAudioId={activeAudioId}
+        activeSubId={activeSubId}
+        onAudioChange={handleAudioChange}
+        onSubtitleChange={handleSubtitleChange}
       />
     </div>
   );

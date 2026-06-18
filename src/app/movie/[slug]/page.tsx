@@ -139,6 +139,7 @@ export default async function MovieDetailPage({ params }: Props) {
               title: ep.title,
               season: ep.season || 1,
             }))}
+            dubs={movie.dubs}
           />
         </section>
 

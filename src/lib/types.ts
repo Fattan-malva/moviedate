@@ -34,6 +34,15 @@ export interface StreamServer {
   codecName?: string;
 }
 
+export interface DubTrack {
+  subjectId: string;
+  lanName: string;
+  lanCode: string;
+  type: number;
+  original?: boolean;
+  detailPath: string;
+}
+
 export interface MovieItem {
   id: string;
   slug: string;
@@ -54,6 +63,7 @@ export interface MovieItem {
   url: string;
   streamServers?: StreamServer[];
   subjectId?: string;
+  dubs?: DubTrack[];
 }
 
 export interface CategorySection {
