@@ -144,7 +144,6 @@ export default function VideoPlayer({
   onAudioChange,
   onSubtitleChange,
 }: VideoPlayerProps) {
-  const [activeUrl, setActiveUrl] = useState(videoUrl || streamServers[0]?.url || "");
   const [activeServer, setActiveServer] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -153,6 +152,8 @@ export default function VideoPlayer({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const episodeListRef = useRef<HTMLDivElement>(null);
+
+  const activeUrl = videoUrl || streamServers[activeServer]?.url || "";
 
   useEffect(() => {
     setWatched(getWatchedEpisodes());
@@ -165,6 +166,14 @@ export default function VideoPlayer({
     }
   }, [currentEpisodeSlug]);
 
+  useEffect(() => {
+    if (videoUrl) {
+      setActiveServer(0);
+      setLoading(true);
+      setError(false);
+    }
+  }, [videoUrl]);
+
   const seasonGroups = useMemo(() => groupEpisodesBySeason(episodes), [episodes]);
   const hasMultipleSeasons = seasonGroups.length > 1;
   const hasEpisodeTitles = episodes.some((ep) => getEpisodeLabel(ep));
@@ -175,10 +184,9 @@ export default function VideoPlayer({
 
   const handleServerChange = useCallback((index: number) => {
     setActiveServer(index);
-    setActiveUrl(streamServers[index]?.url || "");
     setLoading(true);
     setError(false);
-  }, [streamServers]);
+  }, []);
 
   const handleLoad = useCallback(() => {
     setLoading(false);
@@ -316,82 +324,75 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {/* Audio & Subtitle Selector */}
-      {dubs && dubs.length > 0 && (
+      {/* Subtitle Selector (separate from dubbing) */}
+      {subtitleTracks.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center gap-2 mb-2">
             <Languages className="w-3.5 h-3.5 text-gray-500" />
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Audio & Subtitles</span>
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Subtitles</span>
           </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => onSubtitleChange?.({
+                subjectId: "",
+                lanName: "Off",
+                lanCode: "",
+                type: 1,
+                detailPath: "",
+              })}
+              className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                !externalSubId
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
+                  : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
+              }`}
+            >
+              <Languages className="w-3 h-3" />
+              Off
+            </button>
+            {subtitleTracks.map((dub) => (
+              <button
+                key={dub.subjectId}
+                onClick={() => onSubtitleChange?.(dub)}
+                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                  externalSubId === dub.subjectId
+                    ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
+                    : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
+                }`}
+              >
+                <Languages className="w-3 h-3" />
+                {dub.lanName}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-          <div className="space-y-2">
-            {/* Audio Tracks */}
-            {audioTracks.length > 0 && (
-              <div>
-                <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider block mb-1.5">Audio</span>
-                <div className="flex flex-wrap gap-2">
-                  {audioTracks.map((dub) => (
-                    <button
-                      key={dub.subjectId}
-                      onClick={() => onAudioChange?.(dub)}
-                      className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                        externalAudioId === dub.subjectId
-                          ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
-                          : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${externalAudioId === dub.subjectId ? "bg-white" : "bg-gray-500"}`} />
-                      {dub.lanName}
-                      {dub.original && (
-                        <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-                          Original
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Subtitle Tracks */}
-            {subtitleTracks.length > 0 && (
-              <div>
-                <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider block mb-1.5">Subtitles</span>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => onSubtitleChange?.({
-                      subjectId: "",
-                      lanName: "Off",
-                      lanCode: "",
-                      type: 1,
-                      detailPath: "",
-                    })}
-                    className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                      !externalSubId
-                        ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
-                        : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
-                    }`}
-                  >
-                    <Languages className="w-3 h-3" />
-                    Off
-                  </button>
-                  {subtitleTracks.map((dub) => (
-                    <button
-                      key={dub.subjectId}
-                      onClick={() => onSubtitleChange?.(dub)}
-                      className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                        externalSubId === dub.subjectId
-                          ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
-                          : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
-                      }`}
-                    >
-                      <Languages className="w-3 h-3" />
-                      {dub.lanName}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+      {/* Dubbing / Audio Selector */}
+      {audioTracks.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Dubbing</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {audioTracks.map((dub) => (
+              <button
+                key={dub.subjectId}
+                onClick={() => onAudioChange?.(dub)}
+                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                  externalAudioId === dub.subjectId
+                    ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
+                    : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${externalAudioId === dub.subjectId ? "bg-white" : "bg-gray-500"}`} />
+                {dub.lanName}
+                {dub.original && (
+                  <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                    Original
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         </div>
       )}

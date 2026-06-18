@@ -63,7 +63,6 @@ export default function MoviePlayerWrapper({
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [playerKey, setPlayerKey] = useState(0);
-  const [dubKey, setDubKey] = useState(0);
 
   const episodesRef = useRef(currentEpisodes);
   episodesRef.current = currentEpisodes;
@@ -151,9 +150,9 @@ export default function MoviePlayerWrapper({
       setStreamServers(data.streamServers || []);
       setCurrentSlug(episodeSlug);
 
-      // Use different keys so VideoPlayer remounts with new video
-      // but dub selection state persists in this component
-      setDubKey((k) => k + 1);
+      // Remount VideoPlayer for episode/audio changes so
+      // internal state (loading, error, activeServer) resets cleanly
+      // Subtitle changes skip this to keep the player playing seamlessly
       setPlayerKey((k) => k + 1);
 
       const eps = episodesRef.current;
@@ -184,11 +183,32 @@ export default function MoviePlayerWrapper({
     loadEpisode(currentSlug, currentEp?.season, currentEp ? parseInt(currentEp.number) : undefined, dub.subjectId, dub.detailPath);
   }, [currentEpisodes, currentSlug, loadEpisode]);
 
-  const handleSubtitleChange = useCallback((dub: DubTrack) => {
+  const handleSubtitleChange = useCallback(async (dub: DubTrack) => {
     setActiveSubId(dub.subjectId);
-    const currentEp = currentEpisodes.find((ep) => ep.slug === currentSlug);
-    loadEpisode(currentSlug, currentEp?.season, currentEp ? parseInt(currentEp.number) : undefined, dub.subjectId, dub.detailPath);
-  }, [currentEpisodes, currentSlug, loadEpisode]);
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const currentEp = currentEpisodes.find((ep) => ep.slug === currentSlug);
+      const season = currentEp?.season;
+      const episode = currentEp ? parseInt(currentEp.number) : undefined;
+      let url = `/api/scraper/episode/${currentSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}&type=${contentType}`;
+      if (dub.subjectId) {
+        url += `&dubSubjectId=${dub.subjectId}`;
+        if (dub.detailPath) url += `&dubDetailPath=${dub.detailPath}`;
+      }
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data: EpisodeDetail = await res.json();
+      const newUrl = data.videoUrl || data.streamServers?.[0]?.url || "";
+      if (!newUrl) { setLoadError("No video stream available."); return; }
+      setVideoUrl(newUrl);
+      setStreamServers(data.streamServers || []);
+    } catch (err: any) {
+      setLoadError(err?.message || "Failed to load subtitle stream.");
+    } finally {
+      setLoading(false);
+    }
+  }, [currentEpisodes, currentSlug, subjectId, contentType]);
 
   return (
     <div className="relative">
