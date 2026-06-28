@@ -1,0 +1,228 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "MovieDate" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e8]: MovieDate
+      - generic [ref=e10]:
+        - img [ref=e11]
+        - textbox "Search movies, TV shows..." [ref=e14]
+      - generic [ref=e15]:
+        - link "Home" [ref=e16] [cursor=pointer]:
+          - /url: /
+          - img [ref=e17]
+          - generic [ref=e20]: Home
+        - link "Search" [ref=e21] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e22]
+          - generic [ref=e25]: Search
+        - link "Bookmark" [ref=e26] [cursor=pointer]:
+          - /url: /bookmark
+          - img [ref=e27]
+          - generic [ref=e29]: Bookmark
+        - link "History" [ref=e30] [cursor=pointer]:
+          - /url: /history
+          - img [ref=e31]
+          - generic [ref=e35]: History
+  - main [ref=e36]:
+    - generic [ref=e37]:
+      - img "A Special Memory" [ref=e39]
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - img "A Special Memory" [ref=e45]
+          - generic [ref=e46]:
+            - heading "A Special Memory" [level=1] [ref=e47]
+            - generic [ref=e48]:
+              - generic [ref=e49]:
+                - img [ref=e50]
+                - text: "2026"
+              - generic [ref=e52]:
+                - img [ref=e53]
+                - text: "7440"
+              - generic [ref=e56]:
+                - img [ref=e57]
+                - text: Philippines
+              - generic [ref=e60]:
+                - img [ref=e61]
+                - text: "6.6"
+            - generic [ref=e63]:
+              - generic [ref=e64]: Drama
+              - generic [ref=e65]: Romance
+              - generic [ref=e66]: movie
+            - link "Watch Now" [ref=e69] [cursor=pointer]:
+              - /url: "#player"
+            - generic [ref=e70]:
+              - heading "Synopsis" [level=2] [ref=e71]
+              - paragraph [ref=e72]: The illness challenges the couple's love in a way they never anticipated, shifting the narrative from a sweet romance to an emotional journey.
+        - generic [ref=e75]:
+          - img [ref=e76]
+          - paragraph [ref=e78]: No video available
+        - generic [ref=e79]:
+          - heading "More Like This" [level=2] [ref=e80]
+          - generic [ref=e81]:
+            - link "movie 6.4 Miss Behave 2026" [ref=e82] [cursor=pointer]:
+              - /url: /movie/miss-behave-6PsUfaM29u2
+              - generic [ref=e83]:
+                - generic [ref=e86]: movie
+                - generic [ref=e87]:
+                  - img [ref=e88]
+                  - text: "6.4"
+              - generic [ref=e91]:
+                - heading "Miss Behave" [level=3] [ref=e92]
+                - generic [ref=e94]: "2026"
+            - link "movie 7.0 Every Year After 2026" [ref=e95] [cursor=pointer]:
+              - /url: /movie/every-year-after-4uSiXtbEyy1
+              - generic [ref=e96]:
+                - generic [ref=e99]: movie
+                - generic [ref=e100]:
+                  - img [ref=e101]
+                  - text: "7.0"
+              - generic [ref=e104]:
+                - heading "Every Year After" [level=3] [ref=e105]
+                - generic [ref=e107]: "2026"
+            - link "movie 6.6 Nurse the Dead 2026" [ref=e108] [cursor=pointer]:
+              - /url: /movie/nurse-the-dead-KNbw85UM8Y7
+              - generic [ref=e109]:
+                - generic [ref=e112]: movie
+                - generic [ref=e113]:
+                  - img [ref=e114]
+                  - text: "6.6"
+              - generic [ref=e117]:
+                - heading "Nurse the Dead" [level=3] [ref=e118]
+                - generic [ref=e120]: "2026"
+            - link "movie 8.5 The First Jasmine 2026" [ref=e121] [cursor=pointer]:
+              - /url: /movie/the-first-jasmine-sMbVQeA2KJ5
+              - generic [ref=e122]:
+                - generic [ref=e125]: movie
+                - generic [ref=e126]:
+                  - img [ref=e127]
+                  - text: "8.5"
+              - generic [ref=e130]:
+                - heading "The First Jasmine" [level=3] [ref=e131]
+                - generic [ref=e133]: "2026"
+            - link "movie 7.2 Hell University 2026" [ref=e134] [cursor=pointer]:
+              - /url: /movie/hell-university-KtvwDsNvI87
+              - generic [ref=e135]:
+                - generic [ref=e138]: movie
+                - generic [ref=e139]:
+                  - img [ref=e140]
+                  - text: "7.2"
+              - generic [ref=e143]:
+                - heading "Hell University" [level=3] [ref=e144]
+                - generic [ref=e146]: "2026"
+            - link "movie 7.9 Off Campus 2026" [ref=e147] [cursor=pointer]:
+              - /url: /movie/off-campus-aP9MRcE3oqa
+              - generic [ref=e148]:
+                - generic [ref=e151]: movie
+                - generic [ref=e152]:
+                  - img [ref=e153]
+                  - text: "7.9"
+              - generic [ref=e156]:
+                - heading "Off Campus" [level=3] [ref=e157]
+                - generic [ref=e159]: "2026"
+            - link "movie 8.7 The Secrets of Hotel 88 2026" [ref=e160] [cursor=pointer]:
+              - /url: /movie/the-secrets-of-hotel-88-aV2vQBSYCV9
+              - generic [ref=e161]:
+                - generic [ref=e164]: movie
+                - generic [ref=e165]:
+                  - img [ref=e166]
+                  - text: "8.7"
+              - generic [ref=e169]:
+                - heading "The Secrets of Hotel 88" [level=3] [ref=e170]
+                - generic [ref=e172]: "2026"
+            - link "movie 7.1 Elle 2026" [ref=e173] [cursor=pointer]:
+              - /url: /movie/elle-i5sK2nsEnT5
+              - generic [ref=e174]:
+                - generic [ref=e177]: movie
+                - generic [ref=e178]:
+                  - img [ref=e179]
+                  - text: "7.1"
+              - generic [ref=e182]:
+                - heading "Elle" [level=3] [ref=e183]
+                - generic [ref=e185]: "2026"
+            - link "movie 6.3 Human Vapor 2026" [ref=e186] [cursor=pointer]:
+              - /url: /movie/human-vapor-2RcHqJ3oXu3
+              - generic [ref=e187]:
+                - generic [ref=e190]: movie
+                - generic [ref=e191]:
+                  - img [ref=e192]
+                  - text: "6.3"
+              - generic [ref=e195]:
+                - heading "Human Vapor" [level=3] [ref=e196]
+                - generic [ref=e198]: "2026"
+            - link "movie 6.4 Super Subbu 2026" [ref=e199] [cursor=pointer]:
+              - /url: /movie/super-subbu-wEcMQMAwAH5
+              - generic [ref=e200]:
+                - generic [ref=e203]: movie
+                - generic [ref=e204]:
+                  - img [ref=e205]
+                  - text: "6.4"
+              - generic [ref=e208]:
+                - heading "Super Subbu" [level=3] [ref=e209]
+                - generic [ref=e211]: "2026"
+            - link "movie 7.5 Survival of the Thickest 2023" [ref=e212] [cursor=pointer]:
+              - /url: /movie/survival-of-the-thickest-256FTmpVnW
+              - generic [ref=e213]:
+                - generic [ref=e216]: movie
+                - generic [ref=e217]:
+                  - img [ref=e218]
+                  - text: "7.5"
+              - generic [ref=e221]:
+                - heading "Survival of the Thickest" [level=3] [ref=e222]
+                - generic [ref=e224]: "2023"
+            - link "movie 8.1 Silo 2023" [ref=e225] [cursor=pointer]:
+              - /url: /movie/silo-kE1vepYwgS4
+              - generic [ref=e226]:
+                - generic [ref=e229]: movie
+                - generic [ref=e230]:
+                  - img [ref=e231]
+                  - text: "8.1"
+              - generic [ref=e234]:
+                - heading "Silo" [level=3] [ref=e235]
+                - generic [ref=e237]: "2023"
+  - contentinfo [ref=e238]:
+    - generic [ref=e239]:
+      - generic [ref=e240]:
+        - generic [ref=e241]:
+          - generic [ref=e242]:
+            - img [ref=e244]
+            - generic [ref=e246]: MovieDate
+          - paragraph [ref=e247]: Discover and track your favorite movies, TV series, and anime.
+        - generic [ref=e248]:
+          - heading "Navigate" [level=4] [ref=e249]
+          - generic [ref=e250]:
+            - link "Home" [ref=e251] [cursor=pointer]:
+              - /url: /
+            - link "Search" [ref=e252] [cursor=pointer]:
+              - /url: /search
+            - link "Bookmark" [ref=e253] [cursor=pointer]:
+              - /url: /bookmark
+            - link "History" [ref=e254] [cursor=pointer]:
+              - /url: /history
+        - generic [ref=e255]:
+          - heading "Browse" [level=4] [ref=e256]
+          - generic [ref=e257]:
+            - link "Movies" [ref=e258] [cursor=pointer]:
+              - /url: /search?type=movie
+            - link "TV Series" [ref=e259] [cursor=pointer]:
+              - /url: /search?type=tv-series
+            - link "Anime" [ref=e260] [cursor=pointer]:
+              - /url: /search?type=anime
+            - link "K-Drama" [ref=e261] [cursor=pointer]:
+              - /url: /search?type=kdrama
+        - generic [ref=e262]:
+          - heading "Genres" [level=4] [ref=e263]
+          - generic [ref=e264]:
+            - link "Action" [ref=e265] [cursor=pointer]:
+              - /url: /genre/action
+            - link "Horror" [ref=e266] [cursor=pointer]:
+              - /url: /genre/horror
+            - link "Romance" [ref=e267] [cursor=pointer]:
+              - /url: /genre/romance
+            - link "Sci-Fi" [ref=e268] [cursor=pointer]:
+              - /url: /genre/sci-fi
+      - generic [ref=e269]: MovieDate © 2026. Data sourced from MovieBox.
+  - button "Open Next.js Dev Tools" [ref=e275] [cursor=pointer]:
+    - img [ref=e276]
+  - alert [ref=e279]

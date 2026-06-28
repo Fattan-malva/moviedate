@@ -108,14 +108,6 @@ export const CONTENT_TYPES: { value: string; label: string }[] = [
   { value: "disney", label: "Disney" },
   { value: "marvel", label: "Marvel" },
   { value: "dc", label: "DC" },
-  { value: "horror", label: "Horror" },
-  { value: "romance", label: "Romance" },
-  { value: "fantasy", label: "Fantasy" },
-  { value: "action", label: "Action" },
-  { value: "scifi", label: "Sci-Fi" },
-  { value: "drama", label: "Drama" },
-  { value: "thriller", label: "Thriller" },
-  { value: "comedy", label: "Comedy" },
 ];
 
 function toHomepageData(home: HomeData): HomepageData {

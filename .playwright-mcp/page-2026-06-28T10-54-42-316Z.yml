@@ -1,0 +1,87 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - link "moviebox official logo MoviBox" [ref=e10] [cursor=pointer]:
+          - /url: https://moviebox.ph
+          - img "moviebox official logo" [ref=e11]
+          - heading "MoviBox" [level=2] [ref=e12]
+        - navigation [ref=e13]:
+          - link "Home" [ref=e14] [cursor=pointer]:
+            - /url: /
+          - link "TV show" [ref=e15] [cursor=pointer]:
+            - /url: /tv-series
+          - link "Movie" [ref=e16] [cursor=pointer]:
+            - /url: /movie
+          - link "Animation" [ref=e17] [cursor=pointer]:
+            - /url: /animated-series
+          - generic [ref=e18] [cursor=pointer]:
+            - generic [ref=e19]: More
+            - img [ref=e20]
+        - generic [ref=e22] [cursor=pointer]:
+          - img "moviebox search icon" [ref=e23]
+          - textbox "Search movies/ TV Shows" [ref=e24]
+      - generic [ref=e25]:
+        - generic [ref=e26] [cursor=pointer]:
+          - img "Movibox Download App" [ref=e27]
+          - generic [ref=e28]: Download App
+        - button "Select Language" [ref=e31] [cursor=pointer]:
+          - img "iconGlobalLangs" [ref=e32]
+          - generic [ref=e33]: ENGLISH
+          - img "iconTriangle" [ref=e34]
+    - main [ref=e35]:
+      - generic [ref=e37]:
+        - generic [ref=e40]:
+          - link "moviebox left arrow Home" [ref=e41] [cursor=pointer]:
+            - /url: /
+            - img "moviebox left arrow" [ref=e42]
+            - heading "Home" [level=2] [ref=e43]
+          - link "moviebox left arrow TV show" [ref=e44] [cursor=pointer]:
+            - /url: /tv-series
+            - img "moviebox left arrow" [ref=e45]
+            - heading "TV show" [level=2] [ref=e46]
+          - link "moviebox left icon Movie" [ref=e47] [cursor=pointer]:
+            - /url: /movie
+            - img "moviebox left icon" [ref=e48]
+            - heading "Movie" [level=2] [ref=e49]
+          - link "moviebox left arrow Animation" [ref=e50] [cursor=pointer]:
+            - /url: /animated-series
+            - img "moviebox left arrow" [ref=e51]
+            - heading "Animation" [level=2] [ref=e52]
+          - link "moviebox left arrow Novel moviebox novel hot" [ref=e53] [cursor=pointer]:
+            - /url: /novel?tab=novel
+            - img "moviebox left arrow" [ref=e54]
+            - heading "Novel" [level=2] [ref=e55]
+            - img "moviebox novel hot" [ref=e56]
+          - link "moviebox left arrow Most Watched" [ref=e57] [cursor=pointer]:
+            - /url: /ranking-list
+            - img "moviebox left arrow" [ref=e58]
+            - heading "Most Watched" [level=2] [ref=e59]
+          - link "moviebox left arrow MoviBox App" [ref=e60] [cursor=pointer]:
+            - /url: /downloadApp
+            - img "moviebox left arrow" [ref=e61]
+            - heading "MoviBox App" [level=2] [ref=e62]
+          - link "moviebox left arrow FM Download" [ref=e63] [cursor=pointer]:
+            - /url: /fm-download
+            - img "moviebox left arrow" [ref=e64]
+            - heading "FM Download" [level=2] [ref=e65]
+          - link "moviebox left arrow Games" [ref=e66] [cursor=pointer]:
+            - /url: /games
+            - img "moviebox left arrow" [ref=e67]
+            - heading "Games" [level=2] [ref=e68]
+          - link "moviebox left arrow Blogs" [ref=e69] [cursor=pointer]:
+            - /url: /blogs
+            - img "moviebox left arrow" [ref=e70]
+            - heading "Blogs" [level=2] [ref=e71]
+          - link "moviebox left arrow Old Movibox" [ref=e72] [cursor=pointer]:
+            - /url: /old-movibox
+            - img "moviebox left arrow" [ref=e73]
+            - heading "Old Movibox" [level=2] [ref=e74]
+        - generic [ref=e77] [cursor=pointer]:
+          - generic [ref=e78]:
+            - img "moviebox apk download" [ref=e79]
+            - generic [ref=e81]: Download App
+          - img "arr right" [ref=e84]
+    - contentinfo [ref=e86]:
+      - generic [ref=e89]: "Disclaimer: All videos and pictures on MoviBox are from the Internet, and their copyrights belong to the original creators. We only provide webpage services and do not store, record, or upload any content."
+  - img "moviebox loading" [ref=e91]

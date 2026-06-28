@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   Play, Loader2, AlertCircle, ChevronLeft, ChevronRight,
-  Check, Eye, Monitor, Film, Languages
+  Check, Eye, Monitor, Film
 } from "lucide-react";
 
 interface StreamServer {
@@ -174,25 +174,6 @@ export default function VideoPlayer({
     }
   }, [videoUrl]);
 
-  // Toggle embedded subtitle tracks (from the subtitles string) via native textTracks API
-  useEffect(() => {
-    if (!externalSubId?.startsWith("embedded_") || !videoRef.current) return;
-    const video = videoRef.current;
-    const targetLang = externalSubId.replace("embedded_", "");
-    if (!targetLang) return;
-
-    const applyTrack = () => {
-      for (let i = 0; i < video.textTracks.length; i++) {
-        const track = video.textTracks[i];
-        track.mode = track.label.toLowerCase().includes(targetLang) ? "showing" : "disabled";
-      }
-    };
-
-    applyTrack();
-    video.textTracks.addEventListener("addtrack", applyTrack);
-    return () => video.textTracks.removeEventListener("addtrack", applyTrack);
-  }, [externalSubId]);
-
   const seasonGroups = useMemo(() => groupEpisodesBySeason(episodes), [episodes]);
   const hasMultipleSeasons = seasonGroups.length > 1;
   const hasEpisodeTitles = episodes.some((ep) => getEpisodeLabel(ep));
@@ -232,7 +213,6 @@ export default function VideoPlayer({
 
   // Separate dubs into audio tracks and subtitle tracks
   const audioTracks = useMemo(() => dubs?.filter((d) => d.type === 0) || [], [dubs]);
-  const subtitleTracks = useMemo(() => dubs?.filter((d) => d.type === 1) || [], [dubs]);
 
   if (!activeUrl) {
     return (
@@ -366,49 +346,6 @@ export default function VideoPlayer({
                     Original
                   </span>
                 )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Subtitle Selector (separate from dubbing) */}
-      {subtitleTracks.length > 0 && (
-        <div className="mt-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Languages className="w-3.5 h-3.5 text-gray-500" />
-            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Subtitles</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => onSubtitleChange?.({
-                subjectId: "",
-                lanName: "Off",
-                lanCode: "",
-                type: 1,
-                detailPath: "",
-              })}
-              className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                !externalSubId
-                  ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
-                  : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
-              }`}
-            >
-              <Languages className="w-3 h-3" />
-              Off
-            </button>
-            {subtitleTracks.map((dub) => (
-              <button
-                key={dub.subjectId}
-                onClick={() => onSubtitleChange?.(dub)}
-                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                  externalSubId === dub.subjectId
-                    ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25 ring-1 ring-violet-400/50"
-                    : "bg-white/[0.05] text-gray-400 hover:bg-white/[0.1] hover:text-white border border-white/[0.08]"
-                }`}
-              >
-                <Languages className="w-3 h-3" />
-                {dub.lanName}
               </button>
             ))}
           </div>

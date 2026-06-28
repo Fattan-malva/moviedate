@@ -113,17 +113,6 @@ export default function MoviePlayerWrapper({
     }
   }, [dubs, audioTracks, activeAudioId]);
 
-  const activeSubParamsRef = useRef({ subjectId: "", detailPath: "" });
-
-  useEffect(() => {
-    if (!dubs) return;
-    const sub = dubs.find((d) => d.subjectId === activeSubId);
-    activeSubParamsRef.current = {
-      subjectId: activeSubId.startsWith("embedded_") ? "" : activeSubId,
-      detailPath: sub?.detailPath || "",
-    };
-  }, [dubs, activeSubId]);
-
   useEffect(() => {
     if (initialLoadDone.current) return;
     initialLoadDone.current = true;
@@ -146,13 +135,11 @@ export default function MoviePlayerWrapper({
       let url: string;
       if (subjectId && season !== undefined && episode !== undefined) {
         url = `/api/scraper/episode/${episodeSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}&type=${contentType}`;
-        const subId = dubSubjectId || activeSubParamsRef.current.subjectId || undefined;
-        const subPath = dubDetailPath || activeSubParamsRef.current.detailPath || undefined;
-        if (subId) {
-          url += `&dubSubjectId=${subId}`;
+        if (dubSubjectId) {
+          url += `&dubSubjectId=${dubSubjectId}`;
         }
-        if (subPath) {
-          url += `&dubDetailPath=${subPath}`;
+        if (dubDetailPath) {
+          url += `&dubDetailPath=${dubDetailPath}`;
         }
       } else {
         url = `/api/scraper/episode/${episodeSlug}?type=${contentType}`;
@@ -206,8 +193,7 @@ export default function MoviePlayerWrapper({
 
   const handleSubtitleChange = useCallback(async (dub: DubTrack) => {
     setActiveSubId(dub.subjectId);
-    // Embedded subtitles are part of the main video stream, no new URL needed
-    if (dub.subjectId.startsWith("embedded_")) return;
+    if (!dub.subjectId) return;
     setLoading(true);
     setLoadError(null);
     try {

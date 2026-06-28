@@ -1,0 +1,218 @@
+- generic [ref=e6]:
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - link "moviebox official logo MoviBox" [ref=e12] [cursor=pointer]:
+        - /url: https://moviebox.ph
+        - img "moviebox official logo" [ref=e13]
+        - heading "MoviBox" [level=2] [ref=e14]
+      - navigation [ref=e15]:
+        - link "Home" [ref=e16] [cursor=pointer]:
+          - /url: /
+        - link "TV show" [ref=e17] [cursor=pointer]:
+          - /url: /tv-series
+        - link "Movie" [ref=e18] [cursor=pointer]:
+          - /url: /movie
+        - link "Animation" [ref=e19] [cursor=pointer]:
+          - /url: /animated-series
+        - generic [ref=e20] [cursor=pointer]:
+          - generic [ref=e21]: More
+          - img [ref=e22]
+      - generic [ref=e24] [cursor=pointer]:
+        - img "moviebox search icon" [ref=e25]
+        - textbox "Search movies/ TV Shows" [ref=e26]
+    - generic [ref=e27]:
+      - generic [ref=e28] [cursor=pointer]:
+        - img "Movibox Download App" [ref=e29]
+        - generic [ref=e30]: Download App
+      - button "Select Language" [ref=e33] [cursor=pointer]:
+        - img "iconGlobalLangs" [ref=e34]
+        - generic [ref=e35]: ENGLISH
+        - img "iconTriangle" [ref=e36]
+  - generic [ref=e38]:
+    - generic [ref=e41]:
+      - generic [ref=e42] [cursor=pointer]: Home
+      - img "moviebox nav arrow" [ref=e43]
+      - generic [ref=e44]: Details
+    - generic [ref=e45]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - heading "Zootopia [ترجمة عربية]" [level=1] [ref=e54]
+            - generic [ref=e55]:
+              - generic [ref=e57]: "2016"
+              - generic [ref=e59]: R
+              - generic [ref=e61]: 1 h 48 m
+              - generic [ref=e63]: United States
+            - generic [ref=e64]:
+              - generic [ref=e65]: Animation
+              - generic [ref=e66]: Action
+              - generic [ref=e67]: Adventure
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]: "8.0"
+              - generic [ref=e71]: /10
+            - generic [ref=e72]: 618268 rated
+        - generic [ref=e73]:
+          - generic [ref=e74]: In a city of anthropomorphic animals, a rookie bunny cop and a cynical con artist fox must work together to uncover a conspiracy.
+          - generic [ref=e75] [cursor=pointer]: More
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - button "Watch Online" [ref=e78] [cursor=pointer]:
+              - generic [ref=e79]: Watch Online
+            - button "Watch in App" [ref=e80] [cursor=pointer]:
+              - generic [ref=e81]: Watch in App
+          - generic [ref=e82]:
+            - generic "Share To Facebook" [ref=e84] [cursor=pointer]:
+              - img [ref=e85]
+            - generic "Share To Twitter" [ref=e88] [cursor=pointer]:
+              - img [ref=e89]
+            - generic "Share To WhatsApp" [ref=e92] [cursor=pointer]:
+              - img [ref=e93]
+            - generic "Share To Telegram" [ref=e96] [cursor=pointer]:
+              - img [ref=e97]
+      - iframe [ref=e102]:
+        
+    - generic [ref=e103]:
+      - heading "Episodes" [level=4] [ref=e104]
+      - heading "Trailer" [level=4] [ref=e105]
+      - heading "Top Cast" [level=4] [ref=e106]
+      - heading "User Review" [level=4] [ref=e107]
+    - generic [ref=e109]:
+      - heading "Episodes" [level=2] [ref=e110]
+      - generic [ref=e112]:
+        - generic [ref=e114] [cursor=pointer]: film
+        - generic [ref=e116] [cursor=pointer]: lklk
+        - generic [ref=e118] [cursor=pointer]: Netflix
+        - generic [ref=e120] [cursor=pointer]: Plex
+    - generic [ref=e122]:
+      - heading "Trailer" [level=2] [ref=e123]
+      - generic "Watch the official trailer for Zootopia [ترجمة عربية]" [ref=e125]
+    - generic [ref=e127]:
+      - generic [ref=e128]:
+        - iframe [ref=e131]:
+          
+        - generic [ref=e133]:
+          - generic [ref=e134]: Top Cast(22)
+          - img "arrow right" [ref=e136] [cursor=pointer]
+          - generic [ref=e137]:
+            - generic [ref=e138] [cursor=pointer]:
+              - img "starring avatar" [ref=e140]
+              - generic [ref=e141]: Ginnifer Goodwin
+              - generic [ref=e142]: Judy Hopps
+            - generic [ref=e143] [cursor=pointer]:
+              - img "starring avatar" [ref=e145]
+              - generic [ref=e146]: Jason Bateman
+              - generic [ref=e147]: Nick Wilde
+            - generic [ref=e148] [cursor=pointer]:
+              - img "starring avatar" [ref=e150]
+              - generic [ref=e151]: Idris Elba
+              - generic [ref=e152]: Chief Bogo
+            - generic [ref=e153] [cursor=pointer]:
+              - img "starring avatar" [ref=e155]
+              - generic [ref=e156]: Jenny Slate
+              - generic [ref=e157]: Bellwether
+            - generic [ref=e158] [cursor=pointer]:
+              - img "starring avatar" [ref=e160]
+              - generic [ref=e161]: Nate Torrence
+              - generic [ref=e162]: Clawhauser
+            - generic [ref=e163] [cursor=pointer]:
+              - img "starring avatar" [ref=e165]
+              - generic [ref=e166]: Bonnie Hunt
+              - generic [ref=e167]: Bonnie Hopps
+            - generic [ref=e168] [cursor=pointer]:
+              - img "starring avatar" [ref=e170]
+              - generic [ref=e171]: Don Lake
+              - generic [ref=e172]: Stu Hopps
+            - generic [ref=e173] [cursor=pointer]:
+              - img "starring avatar" [ref=e175]
+              - generic [ref=e176]: Tommy Chong
+              - generic [ref=e177]: Yax
+            - generic [ref=e178] [cursor=pointer]:
+              - img "starring avatar" [ref=e180]
+              - generic [ref=e181]: J.K. Simmons
+              - generic [ref=e182]: Mayor Lionheart
+            - generic [ref=e183] [cursor=pointer]:
+              - img "starring avatar" [ref=e185]
+              - generic [ref=e186]: Octavia Spencer
+              - generic [ref=e187]: Mrs. Otterton
+            - generic [ref=e188] [cursor=pointer]:
+              - img "starring avatar" [ref=e190]
+              - generic [ref=e191]: Alan Tudyk
+              - generic [ref=e192]: Duke Weaselton
+            - generic [ref=e193] [cursor=pointer]:
+              - img "starring avatar" [ref=e195]
+              - generic [ref=e196]: Shakira
+              - generic [ref=e197]: Gazelle
+            - generic [ref=e198] [cursor=pointer]:
+              - img "starring avatar" [ref=e200]
+              - generic [ref=e201]: Raymond S. Persi
+              - generic [ref=e202]: Flash
+            - generic [ref=e203] [cursor=pointer]:
+              - img "starring avatar" [ref=e205]
+              - generic [ref=e206]: Raymond S. Persi
+              - generic [ref=e207]: Officer Higgins
+            - generic [ref=e208] [cursor=pointer]:
+              - img "starring avatar" [ref=e210]
+              - generic [ref=e211]: Della Saba
+              - generic [ref=e212]: Young Hopps
+            - generic [ref=e213] [cursor=pointer]:
+              - img "starring avatar" [ref=e215]
+              - generic [ref=e216]: Maurice LaMarche
+              - generic [ref=e217]: Mr. Big
+            - generic [ref=e218] [cursor=pointer]:
+              - img "starring avatar" [ref=e220]
+              - generic [ref=e221]: Phil Johnston
+              - generic [ref=e222]: Gideon Grey
+            - generic [ref=e223] [cursor=pointer]:
+              - img "starring avatar" [ref=e225]
+              - generic [ref=e226]: Phil Johnston
+              - generic [ref=e227]: Young Gideon
+            - generic [ref=e228] [cursor=pointer]:
+              - img "default avatar" [ref=e230]
+              - generic [ref=e231]: Fuschia!
+              - generic [ref=e232]: Drill Sergeant
+            - generic [ref=e233] [cursor=pointer]:
+              - img "starring avatar" [ref=e235]
+              - generic [ref=e236]: John DiMaggio
+              - generic [ref=e237]: Jerry Jumbeaux Jr.
+            - generic [ref=e238] [cursor=pointer]:
+              - img "starring avatar" [ref=e240]
+              - generic [ref=e241]: John DiMaggio
+              - generic [ref=e242]: Moose
+            - generic [ref=e243] [cursor=pointer]:
+              - img "starring avatar" [ref=e245]
+              - generic [ref=e246]: John DiMaggio
+              - generic [ref=e247]: Pig Reporter
+      - generic [ref=e249]:
+        - heading "User Review" [level=3] [ref=e250]
+        - generic [ref=e251]:
+          - generic [ref=e252]:
+            - generic [ref=e253]:
+              - img "author avatar" [ref=e255]
+              - generic [ref=e256]:
+                - heading "UTJxAJ" [level=4] [ref=e257]
+                - generic [ref=e258]: 30/11/2025 13:14
+            - generic [ref=e260]: مين الحمار او استديو البهايم اللي دبلج الفيلم بالشكل الخري ده
+          - generic [ref=e261]:
+            - generic [ref=e262]:
+              - img "author avatar" [ref=e264]
+              - generic [ref=e265]:
+                - heading "Angela 👼🏽" [level=4] [ref=e266]
+                - generic [ref=e267]: 13/06/2025 22:05
+            - generic [ref=e269]: Zootopia [Arabic]_360P
+          - generic [ref=e270]:
+            - generic [ref=e271]:
+              - img "author avatar" [ref=e273]
+              - generic [ref=e274]:
+                - heading "Cynthia Marie Joëlle" [level=4] [ref=e275]
+                - generic [ref=e276]: 26/04/2025 05:59
+            - generic [ref=e278]: Zootopia
+          - generic [ref=e279]:
+            - generic [ref=e280]:
+              - img "author avatar" [ref=e282]
+              - generic [ref=e283]:
+                - heading "@TIMA Robinson 🍓🥰" [level=4] [ref=e284]
+                - generic [ref=e285]: 02/01/2025 17:14
+            - generic [ref=e287]: Zootopia
+        - generic [ref=e288]: — No more content —
+    - generic [ref=e289]: "Disclaimer: All videos and pictures on MoviBox are from the Internet, and their copyrights belong to the original creators. We only provide webpage services and do not store, record, or upload any content."

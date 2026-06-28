@@ -1,0 +1,4 @@
+- generic [ref=e4]:
+  - heading "404 NOT FOUND" [level=1] [ref=e6]
+  - paragraph [ref=e13]: Waterver you're looking for you're not gonna find it here.
+  - button "Back Home" [ref=e15] [cursor=pointer]

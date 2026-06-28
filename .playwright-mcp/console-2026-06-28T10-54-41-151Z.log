@@ -1,0 +1,51 @@
+[    1006ms] [LOG] %c ArtPlayer %c 5.2.1 %c https://artplayer.org color: #fff; background: #5f5f5f color: #fff; background: #4bc729  @ https://spa.aoneroom.com/ssrStatic/moviboxWrong/public/_nuxt/Dece5PiJ.js:5
+[    1149ms] [ERROR] Access to fetch at 'https://tesorf.com/er?a=1' from origin 'https://movibox.net' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://movibox.net/movies/zootopia-EyPg0iI94l6:0
+[    1149ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tesorf.com/er?a=1:0
+[    1150ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    1155ms] Uncaught (in promise) TypeError: Failed to fetch
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:9400)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11019)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11132)
+[    1158ms] [INFO] Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner. @ https://movibox.net/movies/zootopia-EyPg0iI94l6:0
+[    1248ms] [ERROR] Access to fetch at 'https://tesorf.com/er?a=1' from origin 'https://movibox.net' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://movibox.net/movies/zootopia-EyPg0iI94l6:0
+[    1248ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tesorf.com/er?a=1:0
+[    1253ms] Uncaught (in promise) TypeError: Failed to fetch
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:9400)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11019)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11132)
+[    1750ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ https://movibox.net/ad-slot-row:0
+[    1776ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ https://movibox.net/ad-slot:0
+[    2008ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    2183ms] [ERROR] Access to fetch at 'https://tesorf.com/er?a=1' from origin 'https://movibox.net' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://movibox.net/ad-slot-row:0
+[    2183ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tesorf.com/er?a=1:0
+[    2200ms] Uncaught (in promise) TypeError: Failed to fetch
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:9400)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11019)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11132)
+[    2284ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    2344ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    2366ms] [ERROR] Access to fetch at 'https://tesorf.com/er?a=1' from origin 'https://movibox.net' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://movibox.net/ad-slot-row:0
+[    2367ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tesorf.com/er?a=1:0
+[    2370ms] Uncaught (in promise) TypeError: Failed to fetch
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:9400)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11019)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11132)
+[    2612ms] [ERROR] Access to fetch at 'https://tesorf.com/er?a=1' from origin 'https://movibox.net' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://movibox.net/ad-slot:0
+[    2613ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tesorf.com/er?a=1:0
+[    2630ms] Uncaught (in promise) TypeError: Failed to fetch
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:9400)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11019)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11132)
+[    2775ms] [ERROR] Access to fetch at 'https://tesorf.com/er?a=1' from origin 'https://movibox.net' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://movibox.net/ad-slot:0
+[    2775ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://tesorf.com/er?a=1:0
+[    2777ms] Uncaught (in promise) TypeError: Failed to fetch
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:9400)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11019)
+    at <anonymous> (https://pufted.com/p/waWQiOjEyMjc4NDMsInNpZCI6MTc5NDQwNiwid2lkIjo3NDMwOTksInNyYyI6Mn0=eyJ.js:0:11132)
+[    2880ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    3038ms] [LOG] element not Found: a5 @ :37
+[    3336ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    4196ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    4484ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    5471ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
+[    6246ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://firebase.googleapis.com/v1alpha/projects/-/apps/1:854587335712:web:da0ea605801a7998114845/webConfig:0
