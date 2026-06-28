@@ -6,3 +6,4 @@ out/
 *.tsbuildinfo
 cf-worker/node_modules/
 cf-worker/.wrangler/
+.playwright-mcp/
