@@ -212,8 +212,8 @@ export default function MoviePlayerWrapper({
     setLoadError(null);
     try {
       const currentEp = currentEpisodes.find((ep) => ep.slug === currentSlug);
-      const season = currentEp?.season;
-      const episode = currentEp ? parseInt(currentEp.number) : undefined;
+      const season = currentEp?.season ?? 0;
+      const episode = currentEp ? parseInt(currentEp.number) : 0;
       let url = `/api/scraper/episode/${currentSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}&type=${contentType}`;
       if (dub.subjectId) {
         url += `&dubSubjectId=${dub.subjectId}`;

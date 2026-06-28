@@ -1,0 +1,360 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - link "MovieDate" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e8]: MovieDate
+      - generic [ref=e10]:
+        - img [ref=e11]
+        - textbox "Search movies, TV shows..." [ref=e14]
+      - generic [ref=e15]:
+        - link "Home" [ref=e16] [cursor=pointer]:
+          - /url: /
+          - img [ref=e17]
+          - generic [ref=e20]: Home
+        - link "Search" [ref=e21] [cursor=pointer]:
+          - /url: /search
+          - img [ref=e22]
+          - generic [ref=e25]: Search
+        - link "Bookmark" [ref=e26] [cursor=pointer]:
+          - /url: /bookmark
+          - img [ref=e27]
+          - generic [ref=e29]: Bookmark
+        - link "History" [ref=e30] [cursor=pointer]:
+          - /url: /history
+          - img [ref=e31]
+          - generic [ref=e35]: History
+  - main [ref=e36]:
+    - generic [ref=e37]:
+      - img "Zootopia" [ref=e39]
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - img "Zootopia" [ref=e45]
+          - generic [ref=e46]:
+            - heading "Zootopia" [level=1] [ref=e47]
+            - generic [ref=e48]:
+              - generic [ref=e49]:
+                - img [ref=e50]
+                - text: "2016"
+              - generic [ref=e52]:
+                - img [ref=e53]
+                - text: "6480"
+              - generic [ref=e56]:
+                - img [ref=e57]
+                - text: United States
+              - generic [ref=e60]:
+                - img [ref=e61]
+                - text: "8.0"
+            - generic [ref=e63]:
+              - generic [ref=e64]: Animation
+              - generic [ref=e65]: Action
+              - generic [ref=e66]: Adventure
+              - generic [ref=e67]: movie
+            - generic [ref=e68]:
+              - button "Bookmark" [ref=e287] [cursor=pointer]:
+                - img [ref=e288]
+                - text: Bookmark
+              - link "Watch Now" [ref=e70] [cursor=pointer]:
+                - /url: "#player"
+            - generic [ref=e71]:
+              - heading "Synopsis" [level=2] [ref=e72]
+              - paragraph [ref=e73]: In a city of anthropomorphic animals, a rookie bunny cop and a cynical con artist fox must work together to uncover a conspiracy.
+        - generic [ref=e290]:
+          - generic [ref=e292]: Your browser does not support the video tag.
+          - generic [ref=e293]:
+            - generic [ref=e294]:
+              - img [ref=e295]
+              - generic [ref=e297]: Servers
+            - generic [ref=e298]:
+              - button "360p 360" [ref=e299] [cursor=pointer]:
+                - img [ref=e300]
+                - text: 360p
+                - generic [ref=e302]: "360"
+              - button "480p 480" [ref=e303] [cursor=pointer]:
+                - img [ref=e304]
+                - text: 480p
+                - generic [ref=e306]: "480"
+              - button "1080p 1080" [ref=e307] [cursor=pointer]:
+                - img [ref=e308]
+                - text: 1080p
+                - generic [ref=e310]: "1080"
+          - generic [ref=e311]:
+            - generic [ref=e313]: Dubbing
+            - generic [ref=e314]:
+              - button "Original Audio Original" [ref=e315] [cursor=pointer]:
+                - text: Original Audio
+                - generic [ref=e317]: Original
+              - button "Arabic dub" [ref=e318] [cursor=pointer]: Arabic dub
+              - button "French dub" [ref=e320] [cursor=pointer]: French dub
+              - button "Russian dub" [ref=e322] [cursor=pointer]: Russian dub
+              - button "Spanish dub" [ref=e324] [cursor=pointer]: Spanish dub
+              - button "Tamil dub" [ref=e326] [cursor=pointer]: Tamil dub
+              - button "Telugu dub" [ref=e328] [cursor=pointer]: Telugu dub
+              - button "esla dub" [ref=e330] [cursor=pointer]: esla dub
+              - button "ptbr dub" [ref=e332] [cursor=pointer]: ptbr dub
+          - generic [ref=e334]:
+            - generic [ref=e335]:
+              - img [ref=e336]
+              - generic [ref=e340]: Subtitles
+            - generic [ref=e341]:
+              - button "Off" [ref=e342] [cursor=pointer]:
+                - img [ref=e343]
+                - text: "Off"
+              - button "Arabic sub" [active] [ref=e347] [cursor=pointer]:
+                - img [ref=e348]
+                - text: Arabic sub
+              - button "Kurdish sub" [ref=e352] [cursor=pointer]:
+                - img [ref=e353]
+                - text: Kurdish sub
+              - button "Portuguese sub" [ref=e357] [cursor=pointer]:
+                - img [ref=e358]
+                - text: Portuguese sub
+              - button "Russian sub" [ref=e362] [cursor=pointer]:
+                - img [ref=e363]
+                - text: Russian sub
+              - button "Spanish sub" [ref=e367] [cursor=pointer]:
+                - img [ref=e368]
+                - text: Spanish sub
+              - button "English" [ref=e372] [cursor=pointer]:
+                - img [ref=e373]
+                - text: English
+              - button "Filipino" [ref=e377] [cursor=pointer]:
+                - img [ref=e378]
+                - text: Filipino
+              - button "Français" [ref=e382] [cursor=pointer]:
+                - img [ref=e383]
+                - text: Français
+              - button "Indonesian" [ref=e387] [cursor=pointer]:
+                - img [ref=e388]
+                - text: Indonesian
+              - button "Kiswahili" [ref=e392] [cursor=pointer]:
+                - img [ref=e393]
+                - text: Kiswahili
+              - button "Malay" [ref=e397] [cursor=pointer]:
+                - img [ref=e398]
+                - text: Malay
+              - button "Português" [ref=e402] [cursor=pointer]:
+                - img [ref=e403]
+                - text: Português
+              - button "Русский" [ref=e407] [cursor=pointer]:
+                - img [ref=e408]
+                - text: Русский
+              - button "اَلْعَرَبِيَّةُ" [ref=e412] [cursor=pointer]:
+                - img [ref=e413]
+                - text: اَلْعَرَبِيَّةُ
+              - button "اُردُو" [ref=e417] [cursor=pointer]:
+                - img [ref=e418]
+                - text: اُردُو
+              - button "هَرْشٜن هَوْس" [ref=e422] [cursor=pointer]:
+                - img [ref=e423]
+                - text: هَرْشٜن هَوْس
+              - button "বাংলা" [ref=e427] [cursor=pointer]:
+                - img [ref=e428]
+                - text: বাংলা
+              - button "ਪੰਜਾਬੀ" [ref=e432] [cursor=pointer]:
+                - img [ref=e433]
+                - text: ਪੰਜਾਬੀ
+              - button "中文" [ref=e437] [cursor=pointer]:
+                - img [ref=e438]
+                - text: 中文
+        - generic [ref=e80]:
+          - heading "More Like This" [level=2] [ref=e81]
+          - generic [ref=e82]:
+            - 'link "Archives: The Nanyang Mystery movie 8.2 Archives: The Nanyang Mystery 2026" [ref=e442] [cursor=pointer]':
+              - /url: /movie/archives-the-nanyang-mystery-k6uE0HcL1r1
+              - generic [ref=e84]:
+                - 'img "Archives: The Nanyang Mystery" [ref=e443]'
+                - generic [ref=e87]: movie
+                - generic [ref=e88]:
+                  - img [ref=e89]
+                  - text: "8.2"
+              - generic [ref=e92]:
+                - 'heading "Archives: The Nanyang Mystery" [level=3] [ref=e93]'
+                - generic [ref=e95]: "2026"
+            - link "Masters of the Universe tv-series 7.0 Masters of the Universe 2026" [ref=e444] [cursor=pointer]:
+              - /url: /movie/masters-of-the-universe-g6fDdvegRi9
+              - generic [ref=e97]:
+                - img "Masters of the Universe" [ref=e445]
+                - generic [ref=e100]: tv-series
+                - generic [ref=e101]:
+                  - img [ref=e102]
+                  - text: "7.0"
+              - generic [ref=e105]:
+                - heading "Masters of the Universe" [level=3] [ref=e106]
+                - generic [ref=e108]: "2026"
+            - link "Deep Water tv-series 5.9 Deep Water 2026 • 6360" [ref=e446] [cursor=pointer]:
+              - /url: /movie/deep-water-40PxoHOf87
+              - generic [ref=e110]:
+                - img "Deep Water" [ref=e447]
+                - generic [ref=e113]: tv-series
+                - generic [ref=e114]:
+                  - img [ref=e115]
+                  - text: "5.9"
+              - generic [ref=e118]:
+                - heading "Deep Water" [level=3] [ref=e119]
+                - generic [ref=e120]:
+                  - generic [ref=e121]: "2026"
+                  - generic [ref=e122]: •
+                  - generic [ref=e123]: "6360"
+            - link "Husbands in Action tv-series 6.1 Husbands in Action 2026 • 6420" [ref=e448] [cursor=pointer]:
+              - /url: /movie/husbands-in-action-uBp0n5ZUlz6
+              - generic [ref=e125]:
+                - img "Husbands in Action" [ref=e449]
+                - generic [ref=e128]: tv-series
+                - generic [ref=e129]:
+                  - img [ref=e130]
+                  - text: "6.1"
+              - generic [ref=e133]:
+                - heading "Husbands in Action" [level=3] [ref=e134]
+                - generic [ref=e135]:
+                  - generic [ref=e136]: "2026"
+                  - generic [ref=e137]: •
+                  - generic [ref=e138]: "6420"
+            - link "Mortal Kombat II tv-series 6.7 Mortal Kombat II 2026 • 6960" [ref=e450] [cursor=pointer]:
+              - /url: /movie/mortal-kombat-ii-itiiq5IHsL8
+              - generic [ref=e140]:
+                - img "Mortal Kombat II" [ref=e451]
+                - generic [ref=e143]: tv-series
+                - generic [ref=e144]:
+                  - img [ref=e145]
+                  - text: "6.7"
+              - generic [ref=e148]:
+                - heading "Mortal Kombat II" [level=3] [ref=e149]
+                - generic [ref=e150]:
+                  - generic [ref=e151]: "2026"
+                  - generic [ref=e152]: •
+                  - generic [ref=e153]: "6960"
+            - link "Colony tv-series 6.9 Colony 2026 • 7320" [ref=e452] [cursor=pointer]:
+              - /url: /movie/colony-06FbDRS87x3
+              - generic [ref=e155]:
+                - img "Colony" [ref=e453]
+                - generic [ref=e158]: tv-series
+                - generic [ref=e159]:
+                  - img [ref=e160]
+                  - text: "6.9"
+              - generic [ref=e163]:
+                - heading "Colony" [level=3] [ref=e164]
+                - generic [ref=e165]:
+                  - generic [ref=e166]: "2026"
+                  - generic [ref=e167]: •
+                  - generic [ref=e168]: "7320"
+            - link "Ghost Island tv-series 5.6 Ghost Island 2024 • 5700" [ref=e454] [cursor=pointer]:
+              - /url: /movie/ghost-island-QQp8Lvpi6ka
+              - generic [ref=e170]:
+                - img "Ghost Island" [ref=e455]
+                - generic [ref=e173]: tv-series
+                - generic [ref=e174]:
+                  - img [ref=e175]
+                  - text: "5.6"
+              - generic [ref=e178]:
+                - heading "Ghost Island" [level=3] [ref=e179]
+                - generic [ref=e180]:
+                  - generic [ref=e181]: "2024"
+                  - generic [ref=e182]: •
+                  - generic [ref=e183]: "5700"
+            - link "Swapped tv-series 7.3 Swapped 2026 • 5880" [ref=e456] [cursor=pointer]:
+              - /url: /movie/swapped-Ewgiw2dLJF6
+              - generic [ref=e185]:
+                - img "Swapped" [ref=e457]
+                - generic [ref=e188]: tv-series
+                - generic [ref=e189]:
+                  - img [ref=e190]
+                  - text: "7.3"
+              - generic [ref=e193]:
+                - heading "Swapped" [level=3] [ref=e194]
+                - generic [ref=e195]:
+                  - generic [ref=e196]: "2026"
+                  - generic [ref=e197]: •
+                  - generic [ref=e198]: "5880"
+            - link "tv-series 4.3 Village of the Dead 2025 • 5700" [ref=e199] [cursor=pointer]:
+              - /url: /movie/village-of-the-dead-KFV3ycLB4I4
+              - generic [ref=e200]:
+                - generic [ref=e203]: tv-series
+                - generic [ref=e204]:
+                  - img [ref=e205]
+                  - text: "4.3"
+              - generic [ref=e208]:
+                - heading "Village of the Dead" [level=3] [ref=e209]
+                - generic [ref=e210]:
+                  - generic [ref=e211]: "2025"
+                  - generic [ref=e212]: •
+                  - generic [ref=e213]: "5700"
+            - link "tv-series 6.8 Enola Holmes 3 2026 • 6300" [ref=e214] [cursor=pointer]:
+              - /url: /movie/enola-holmes-3-gs48BrbKpV2
+              - generic [ref=e215]:
+                - generic [ref=e218]: tv-series
+                - generic [ref=e219]:
+                  - img [ref=e220]
+                  - text: "6.8"
+              - generic [ref=e223]:
+                - heading "Enola Holmes 3" [level=3] [ref=e224]
+                - generic [ref=e225]:
+                  - generic [ref=e226]: "2026"
+                  - generic [ref=e227]: •
+                  - generic [ref=e228]: "6300"
+            - link "movie 8.7 X-Men '97 2024" [ref=e229] [cursor=pointer]:
+              - /url: /movie/x-men-97-wGHJWJPUdP5
+              - generic [ref=e230]:
+                - generic [ref=e233]: movie
+                - generic [ref=e234]:
+                  - img [ref=e235]
+                  - text: "8.7"
+              - generic [ref=e238]:
+                - heading "X-Men '97" [level=3] [ref=e239]
+                - generic [ref=e241]: "2024"
+            - link "movie 7.1 The Ghost in the Shell 2026" [ref=e242] [cursor=pointer]:
+              - /url: /movie/the-ghost-in-the-shell-CFlK7bfVhea
+              - generic [ref=e243]:
+                - generic [ref=e246]: movie
+                - generic [ref=e247]:
+                  - img [ref=e248]
+                  - text: "7.1"
+              - generic [ref=e251]:
+                - heading "The Ghost in the Shell" [level=3] [ref=e252]
+                - generic [ref=e254]: "2026"
+  - contentinfo [ref=e255]:
+    - generic [ref=e256]:
+      - generic [ref=e257]:
+        - generic [ref=e258]:
+          - generic [ref=e259]:
+            - img [ref=e261]
+            - generic [ref=e263]: MovieDate
+          - paragraph [ref=e264]: Discover and track your favorite movies, TV series, and anime.
+        - generic [ref=e265]:
+          - heading "Navigate" [level=4] [ref=e266]
+          - generic [ref=e267]:
+            - link "Home" [ref=e268] [cursor=pointer]:
+              - /url: /
+            - link "Search" [ref=e269] [cursor=pointer]:
+              - /url: /search
+            - link "Bookmark" [ref=e270] [cursor=pointer]:
+              - /url: /bookmark
+            - link "History" [ref=e271] [cursor=pointer]:
+              - /url: /history
+        - generic [ref=e272]:
+          - heading "Browse" [level=4] [ref=e273]
+          - generic [ref=e274]:
+            - link "Movies" [ref=e275] [cursor=pointer]:
+              - /url: /search?type=movie
+            - link "TV Series" [ref=e276] [cursor=pointer]:
+              - /url: /search?type=tv-series
+            - link "Anime" [ref=e277] [cursor=pointer]:
+              - /url: /search?type=anime
+            - link "K-Drama" [ref=e278] [cursor=pointer]:
+              - /url: /search?type=kdrama
+        - generic [ref=e279]:
+          - heading "Genres" [level=4] [ref=e280]
+          - generic [ref=e281]:
+            - link "Action" [ref=e282] [cursor=pointer]:
+              - /url: /genre/action
+            - link "Horror" [ref=e283] [cursor=pointer]:
+              - /url: /genre/horror
+            - link "Romance" [ref=e284] [cursor=pointer]:
+              - /url: /genre/romance
+            - link "Sci-Fi" [ref=e285] [cursor=pointer]:
+              - /url: /genre/sci-fi
+      - generic [ref=e286]: MovieDate © 2026. Data sourced from MovieBox.
+  - button "Open Next.js Dev Tools" [ref=e463] [cursor=pointer]:
+    - img [ref=e464]
+  - alert [ref=e467]

@@ -174,6 +174,25 @@ export default function VideoPlayer({
     }
   }, [videoUrl]);
 
+  // Toggle embedded subtitle tracks (from the subtitles string) via native textTracks API
+  useEffect(() => {
+    if (!externalSubId?.startsWith("embedded_") || !videoRef.current) return;
+    const video = videoRef.current;
+    const targetLang = externalSubId.replace("embedded_", "");
+    if (!targetLang) return;
+
+    const applyTrack = () => {
+      for (let i = 0; i < video.textTracks.length; i++) {
+        const track = video.textTracks[i];
+        track.mode = track.label.toLowerCase().includes(targetLang) ? "showing" : "disabled";
+      }
+    };
+
+    applyTrack();
+    video.textTracks.addEventListener("addtrack", applyTrack);
+    return () => video.textTracks.removeEventListener("addtrack", applyTrack);
+  }, [externalSubId]);
+
   const seasonGroups = useMemo(() => groupEpisodesBySeason(episodes), [episodes]);
   const hasMultipleSeasons = seasonGroups.length > 1;
   const hasEpisodeTitles = episodes.some((ep) => getEpisodeLabel(ep));
