@@ -101,13 +101,15 @@ export const CONTENT_TYPES: { value: string; label: string }[] = [
   { value: "tv-series", label: "TV Series" },
   { value: "anime", label: "Anime" },
   { value: "kdrama", label: "K-Drama" },
-  { value: "kshow", label: "K-Show" },
   { value: "cdrama", label: "C-Drama" },
-  { value: "tagalog", label: "Tagalog" },
-  { value: "english", label: "English Dubbed" },
-  { value: "disney", label: "Disney" },
-  { value: "marvel", label: "Marvel" },
-  { value: "dc", label: "DC" },
+  { value: "horror", label: "Horror" },
+  { value: "romance", label: "Romance" },
+  { value: "fantasy", label: "Fantasy" },
+  { value: "action", label: "Action" },
+  { value: "scifi", label: "Sci-Fi" },
+  { value: "drama", label: "Drama" },
+  { value: "thriller", label: "Thriller" },
+  { value: "comedy", label: "Comedy" },
 ];
 
 function toHomepageData(home: HomeData): HomepageData {
