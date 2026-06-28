@@ -236,18 +236,41 @@ function extractDetailFromNuxtPayload(html: string, slug: string): DetailData | 
     }
 
     // Extract dubs/subtitles from subject
-    const dubs = Array.isArray(subject.dubs)
-      ? subject.dubs.map((d: any) => ({
-          subjectId: String(d.subjectId || ""),
-          lanName: d.lanName || "",
-          lanCode: d.lanCode || "",
-          type: d.type ?? 0,
-          original: !!d.original,
-          detailPath: d.detailPath || "",
-        }))
-      : undefined;
+    const rawDubs: any[] = Array.isArray(subject.dubs) ? subject.dubs : [];
+    const dubsList = rawDubs.map((d: any) => ({
+      subjectId: String(d.subjectId || ""),
+      lanName: d.lanName || "",
+      lanCode: d.lanCode || "",
+      type: d.type ?? 0,
+      original: !!d.original,
+      detailPath: d.detailPath || "",
+    }));
 
     const subtitlesStr = typeof subject.subtitles === "string" ? subject.subtitles : undefined;
+
+    // Parse embedded subtitles string and add entries not already in dubs
+    if (subtitlesStr) {
+      const embeddedNames = subtitlesStr.split(",").map((s: string) => s.trim()).filter(Boolean);
+      const existingSubNames = new Set(
+        dubsList.filter((d) => d.type === 1).map((d) => d.lanName.toLowerCase())
+      );
+      for (const name of embeddedNames) {
+        if (!existingSubNames.has(name.toLowerCase())) {
+          const safe = name.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+          const code = safe.slice(0, 20) || `lang${dubsList.length}`;
+          dubsList.push({
+            subjectId: `embedded_${code}`,
+            lanName: name,
+            lanCode: "",
+            type: 1,
+            original: false,
+            detailPath: "",
+          });
+        }
+      }
+    }
+
+    const dubs = dubsList.length > 0 ? dubsList : undefined;
 
     // Determine type
     const isTvSeries = subject.subjectType === 2 || (resourceData?.seasons?.length > 1) || episodes.length > 1;

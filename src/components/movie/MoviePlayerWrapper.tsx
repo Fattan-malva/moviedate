@@ -93,7 +93,15 @@ export default function MoviePlayerWrapper({
     if (audioTracks.length > 0) return audioTracks[0].subjectId;
     return "";
   });
-  const [activeSubId, setActiveSubId] = useState<string>("");
+  const [activeSubId, setActiveSubId] = useState<string>(() => {
+    if (!dubs) return "";
+    const subs = dubs.filter((d) => d.type === 1);
+    const priority = subs.filter((d) =>
+      d.lanCode?.startsWith("en") || d.lanCode?.startsWith("id") ||
+      d.lanName?.toLowerCase().includes("english") || d.lanName?.toLowerCase().includes("indonesia")
+    );
+    return priority.length > 0 ? priority[0].subjectId : "";
+  });
 
   useEffect(() => {
     if (!dubs || dubs.length === 0) return;
@@ -104,6 +112,17 @@ export default function MoviePlayerWrapper({
       setActiveAudioId(audioTracks[0].subjectId);
     }
   }, [dubs, audioTracks, activeAudioId]);
+
+  const activeSubParamsRef = useRef({ subjectId: "", detailPath: "" });
+
+  useEffect(() => {
+    if (!dubs) return;
+    const sub = dubs.find((d) => d.subjectId === activeSubId);
+    activeSubParamsRef.current = {
+      subjectId: activeSubId.startsWith("embedded_") ? "" : activeSubId,
+      detailPath: sub?.detailPath || "",
+    };
+  }, [dubs, activeSubId]);
 
   useEffect(() => {
     if (initialLoadDone.current) return;
@@ -127,11 +146,13 @@ export default function MoviePlayerWrapper({
       let url: string;
       if (subjectId && season !== undefined && episode !== undefined) {
         url = `/api/scraper/episode/${episodeSlug}?subjectId=${subjectId}&se=${season}&ep=${episode}&type=${contentType}`;
-        if (dubSubjectId) {
-          url += `&dubSubjectId=${dubSubjectId}`;
+        const subId = dubSubjectId || activeSubParamsRef.current.subjectId || undefined;
+        const subPath = dubDetailPath || activeSubParamsRef.current.detailPath || undefined;
+        if (subId) {
+          url += `&dubSubjectId=${subId}`;
         }
-        if (dubDetailPath) {
-          url += `&dubDetailPath=${dubDetailPath}`;
+        if (subPath) {
+          url += `&dubDetailPath=${subPath}`;
         }
       } else {
         url = `/api/scraper/episode/${episodeSlug}?type=${contentType}`;
@@ -185,6 +206,8 @@ export default function MoviePlayerWrapper({
 
   const handleSubtitleChange = useCallback(async (dub: DubTrack) => {
     setActiveSubId(dub.subjectId);
+    // Embedded subtitles are part of the main video stream, no new URL needed
+    if (dub.subjectId.startsWith("embedded_")) return;
     setLoading(true);
     setLoadError(null);
     try {

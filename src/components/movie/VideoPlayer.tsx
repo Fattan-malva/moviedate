@@ -212,17 +212,8 @@ export default function VideoPlayer({
   }, [onEpisodeSelect, scrollToEpisode]);
 
   // Separate dubs into audio tracks and subtitle tracks
-  // Show all subtitle tracks, prioritizing English & Indonesian
   const audioTracks = useMemo(() => dubs?.filter((d) => d.type === 0) || [], [dubs]);
-  const subtitleTracks = useMemo(() => {
-    const subs = dubs?.filter((d) => d.type === 1) || [];
-    const priority = subs.filter((d) =>
-      d.lanCode?.startsWith("en") || d.lanCode?.startsWith("id") ||
-      d.lanName?.toLowerCase().includes("english") || d.lanName?.toLowerCase().includes("indonesia")
-    );
-    const rest = subs.filter((d) => !priority.includes(d));
-    return [...priority, ...rest];
-  }, [dubs]);
+  const subtitleTracks = useMemo(() => dubs?.filter((d) => d.type === 1) || [], [dubs]);
 
   if (!activeUrl) {
     return (
